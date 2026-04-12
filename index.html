@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>程素婷的英语阅读试验</title>
     <style>
+        /* --- 你的样式保持不变，很优雅 --- */
         body {
             font-family: 'Georgia', serif;
             max-width: 800px;
@@ -78,7 +79,7 @@
         <h2>📝 所有笔记</h2>
         <div id="note-list-container">
             <ul class="note-list" id="note-list">
-                <li>加载中...</li>
+                <li>📡 正在加载笔记列表...</li>
             </ul>
         </div>
     </div>
@@ -89,40 +90,52 @@
     </div>
 
     <script>
-        // 自动扫描 notes 文件夹，列出所有 .md 文件
-        const repo = 'chengssuting/chengssuting.github.io';
-        const branch = 'main';
-        const folder = 'notes';
-        
-        fetch(`https://api.github.com/repos/${repo}/contents/${folder}?ref=${branch}`)
-            .then(response => response.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    // 过滤出 .md 文件，按文件名倒序排列（新的在前）
-                    const mdFiles = data
-                        .filter(file => file.name.endsWith('.md'))
-                        .sort((a, b) => b.name.localeCompare(a.name));
-                    
-                    if (mdFiles.length === 0) {
-                        document.getElementById('note-list').innerHTML = '<li>暂无笔记，正在拆第一句 🚧</li>';
+        // 修正后的脚本，能更好地处理中文和空格文件名
+        (function() {
+            // 1. 确认你的仓库信息 (根据你提供的API数据已确认)
+            const REPO_OWNER = 'chengsuting';
+            const REPO_NAME = 'chengsuting.github.io';
+            const NOTES_FOLDER = 'notes';
+            
+            const listContainer = document.getElementById('note-list');
+            
+            // 2. 从GitHub API获取文件列表
+            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${NOTES_FOLDER}`;
+            
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!Array.isArray(data) || data.length === 0) {
+                        listContainer.innerHTML = '<li>📭 笔记文件夹还是空的，快写下你的第一篇笔记吧！</li>';
                         return;
                     }
                     
+                    // 3. 过滤出 .md 文件，并按文件名倒序排列（新的在前）
+                    const mdFiles = data
+                        .filter(file => file.name && file.name.endsWith('.md'))
+                        .sort((a, b) => b.name.localeCompare(a.name));
+                    
+                    if (mdFiles.length === 0) {
+                        listContainer.innerHTML = '<li>📭 还没有找到 .md 笔记文件，记得用这个后缀哦。</li>';
+                        return;
+                    }
+                    
+                    // 4. 生成笔记列表的HTML (使用 file.download_url 确保能直接访问原始内容)
                     const listHtml = mdFiles.map(file => {
-                        // 从文件名生成标题（去掉 .md 后缀，把横杠换成空格）
-                        let title = file.name.replace('.md', '').replace(/-/g, ' ');
-                        return `<li><a href="${file.download_url}">📄 ${title}</a></li>`;
+                        // 获取文件名（去掉.md后缀）作为显示标题
+                        let title = file.name.replace(/\.md$/, '');
+                        // 这里直接使用GitHub提供的原始内容下载链接，最稳定
+                        const fileUrl = file.download_url;
+                        return `<li><a href="${fileUrl}" target="_blank" rel="noopener noreferrer">📄 ${title}</a></li>`;
                     }).join('');
                     
-                    document.getElementById('note-list').innerHTML = listHtml;
-                } else {
-                    document.getElementById('note-list').innerHTML = '<li>无法加载笔记列表，请检查网络或仓库设置。</li>';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('note-list').innerHTML = '<li>加载失败，请刷新重试。</li>';
-            });
-    </script>
-</body>
-</html>
+                    listContainer.innerHTML = listHtml;
+                })
+                .catch(error => {
+                    console.error('获取笔记列表失败:', error);
+                    listCo
