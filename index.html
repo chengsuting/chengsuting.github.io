@@ -37,6 +37,23 @@
             margin-top: 0;
             color: #2c3e50;
         }
+        .note-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .note-list li {
+            margin: 0.8rem 0;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        .note-list a {
+            color: #8b5a2b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .note-list a:hover {
+            text-decoration: underline;
+        }
         .footer {
             margin-top: 3rem;
             text-align: center;
@@ -44,13 +61,6 @@
             font-size: 0.9rem;
             border-top: 1px solid #e6e0d4;
             padding-top: 1.5rem;
-        }
-        a {
-            color: #8b5a2b;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
         }
     </style>
 </head>
@@ -61,19 +71,58 @@
     <div class="card">
         <h2>📌 正在阅读</h2>
         <p>《自深深处》（De Profundis）—— 奥斯卡·王尔德</p>
-        <p>状态：拆解第一段第一句中 🚧</p>
+        <p>状态：拆解中 🚀</p>
     </div>
 
     <div class="card">
-        <h2>📝 最新笔记</h2>
-        <p><strong>第一句核心生词</strong><br>
-        fruitless · imprisonment · for one's sake · pass through · such as</p>
-        <p><a href="#">📄 查看完整卡片</a>（链接待更新）</p>
+        <h2>📝 所有笔记</h2>
+        <div id="note-list-container">
+            <ul class="note-list" id="note-list">
+                <li>加载中...</li>
+            </ul>
+        </div>
     </div>
 
     <div class="footer">
         🌱 每天拆一句，慢慢来，比较快<br>
         2026 · 程素婷的阅读角落
     </div>
+
+    <script>
+        // 自动扫描 notes 文件夹，列出所有 .md 文件
+        const repo = 'chengssuting/chengssuting.github.io';
+        const branch = 'main';
+        const folder = 'notes';
+        
+        fetch(`https://api.github.com/repos/${repo}/contents/${folder}?ref=${branch}`)
+            .then(response => response.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    // 过滤出 .md 文件，按文件名倒序排列（新的在前）
+                    const mdFiles = data
+                        .filter(file => file.name.endsWith('.md'))
+                        .sort((a, b) => b.name.localeCompare(a.name));
+                    
+                    if (mdFiles.length === 0) {
+                        document.getElementById('note-list').innerHTML = '<li>暂无笔记，正在拆第一句 🚧</li>';
+                        return;
+                    }
+                    
+                    const listHtml = mdFiles.map(file => {
+                        // 从文件名生成标题（去掉 .md 后缀，把横杠换成空格）
+                        let title = file.name.replace('.md', '').replace(/-/g, ' ');
+                        return `<li><a href="${file.download_url}">📄 ${title}</a></li>`;
+                    }).join('');
+                    
+                    document.getElementById('note-list').innerHTML = listHtml;
+                } else {
+                    document.getElementById('note-list').innerHTML = '<li>无法加载笔记列表，请检查网络或仓库设置。</li>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('note-list').innerHTML = '<li>加载失败，请刷新重试。</li>';
+            });
+    </script>
 </body>
 </html>
