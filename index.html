@@ -200,9 +200,11 @@
                     displayTitle = displayTitle.slice(date.length).replace(/^[-_\s]+/, '');
                 }
                 if (!displayTitle) displayTitle = note.title;
+                // 关键修改：链接指向 render.html 并传递文件参数
+                const encodedFile = encodeURIComponent(note.file);
                 return `
                     <div class="note-item">
-                        <div class="note-title"><a href="${note.file}">📄 ${displayTitle}</a></div>
+                        <div class="note-title"><a href="render.html?file=${encodedFile}">📄 ${displayTitle}</a></div>
                         ${date ? `<div class="note-date">${date}</div>` : ''}
                     </div>
                 `;
