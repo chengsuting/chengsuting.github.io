@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>阅读 · 程素婷</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #fefaf5;
+            font-family: -apple-system, BlinkMacSystemFont, "Georgia", serif;
+            padding: 1rem;
+            line-height: 1.7;
+            color: #2c3e2f;
+        }
+        .container {
+            max-width: 880px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            padding: 1.6rem;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 1.2rem; }
+            body { padding: 0.5rem; }
+            h1 { font-size: 1.6rem; }
+            h2 { font-size: 1.35rem; }
+        }
+        h1, h2, h3 { margin-top: 1.2em; font-weight: 500; }
+        h1 { font-size: 1.8rem; border-left: 4px solid #c7b28b; padding-left: 1rem; }
+        h2 { font-size: 1.5rem; border-bottom: 1px solid #ede3d2; padding-bottom: 0.2rem; }
+        p, li { margin: 0.7rem 0; color: #3e4a3a; }
+        a { color: #7c5e3a; text-decoration: none; border-bottom: 1px dotted #d4c5ae; }
+        a:hover { color: #4f6b3a; }
+        pre, code { background: #f6f2ea; padding: 0.2rem 0.4rem; border-radius: 8px; font-family: monospace; }
+        pre { padding: 1rem; overflow-x: auto; }
+        .back-link { display: inline-block; margin-bottom: 1.2rem; font-size: 0.9rem; }
+        .footer { margin-top: 2rem; font-size: 0.75rem; color: #b8a992; text-align: center; border-top: 1px solid #ece3d7; padding-top: 1rem; }
+        @media (prefers-color-scheme: dark) {
+            body { background: #1e1e1e; }
+            .container { background: #2a2a2a; color: #e4e4e4; }
+            p, li { color: #cfcfcf; }
+            h1, h2, h3 { color: #e8dcca; }
+            pre, code { background: #3a3a3a; color: #f0f0f0; }
+            .back-link, .footer { color: #9e9e9e; }
+            a { color: #dbb87c; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div><a href="https://chengsuting.github.io" class="back-link">← 返回主页</a></div>
+    <div id="markdown-content">加载中…</div>
+    <div class="footer">程素婷 · 英语阅读试验</div>
+</div>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const file = params.get('file');
+    if (!file) {
+        document.getElementById('markdown-content').innerHTML = '<p>⚠️ 未指定笔记文件。</p>';
+    } else {
+        fetch(file)
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.text();
+            })
+            .then(md => {
+                const html = marked.parse(md);
+                document.getElementById('markdown-content').innerHTML = html;
+            })
+            .catch(err => {
+                document.getElementById('markdown-content').innerHTML = `<p>❌ 加载失败: ${err.message}</p>`;
+            });
+    }
+</script>
+</body>
+</html>
