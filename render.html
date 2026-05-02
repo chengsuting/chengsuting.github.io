@@ -34,8 +34,28 @@
         p, li { margin: 0.7rem 0; color: #3e4a3a; }
         a { color: #7c5e3a; text-decoration: none; border-bottom: 1px dotted #d4c5ae; }
         a:hover { color: #4f6b3a; }
-        pre, code { background: #f6f2ea; padding: 0.2rem 0.4rem; border-radius: 8px; font-family: monospace; }
+        pre, code {
+            background: #f6f2ea;
+            padding: 0.2rem 0.4rem;
+            border-radius: 8px;
+            font-family: monospace;
+        }
         pre { padding: 1rem; overflow-x: auto; }
+        /* 表格样式 */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+        th, td {
+            border: 1px solid #c0b7a8;
+            padding: 8px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f5f2e8;
+        }
         .back-link { display: inline-block; margin-bottom: 1.2rem; font-size: 0.9rem; }
         .footer { margin-top: 2rem; font-size: 0.75rem; color: #b8a992; text-align: center; border-top: 1px solid #ece3d7; padding-top: 1rem; }
         @media (prefers-color-scheme: dark) {
@@ -71,7 +91,7 @@
                 document.getElementById('markdown-content').innerHTML = html;
             })
             .catch(err => {
-                document.getElementById('markdown-content').innerHTML = `<p>❌ 加载失败: ${err.message}</p>`;
+                document.getElementById('markdown-content').innerHTML = `<p>❌ 加载失败: ${err.message}</p>';
             });
     }
 </script>
