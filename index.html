@@ -1,122 +1,218 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>程素婷的英语阅读试验</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>程素婷 · 英语阅读试验</title>
     <style>
-        /* --- 你的样式可以保持不变，为了完整性我这里复制一份 --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Georgia', serif;
-            max-width: 800px;
+            background: #fefaf5;   /* 奶油米色 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #2c3e2f;
+            line-height: 1.65;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 880px;
             margin: 0 auto;
-            padding: 2rem;
-            line-height: 1.6;
-            color: #1a1a1a;
-            background-color: #faf9f8;
+        }
+
+        /* 头部 */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
         }
         h1 {
-            color: #2c3e50;
-            border-bottom: 3px solid #e2c9b3;
+            font-family: "Georgia", "Times New Roman", serif;
+            font-size: 2.2rem;
+            font-weight: 500;
+            color: #3a6b4b;
+            letter-spacing: -0.5px;
+            border-bottom: 1px solid #e6dfd0;
             display: inline-block;
             padding-bottom: 0.3rem;
         }
-        .subtitle {
-            color: #7f8c8d;
+        .sub {
+            color: #7f8c6d;
+            margin-top: 0.6rem;
+            font-size: 0.95rem;
             font-style: italic;
-            margin-top: -0.5rem;
-            margin-bottom: 2rem;
         }
+
+        /* 卡片通用样式 */
         .card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border-left: 5px solid #e2c9b3;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.05);
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            transition: box-shadow 0.2s ease;
         }
-        .card h2 {
-            margin-top: 0;
-            color: #2c3e50;
+        .card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
         }
-        .note-list {
-            list-style: none;
-            padding-left: 0;
-        }
-        .note-list li {
-            margin: 0.8rem 0;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #eee;
-        }
-        .note-list a {
-            color: #8b5a2b;
-            text-decoration: none;
+
+        .card-title {
+            font-family: "Georgia", serif;
+            font-size: 1.5rem;
             font-weight: 500;
+            color: #2c5a3b;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.3px;
         }
-        .note-list a:hover {
-            text-decoration: underline;
+        .card-meta {
+            font-size: 0.85rem;
+            color: #9b8e7a;
+            margin-bottom: 1.2rem;
+            border-left: 3px solid #d9cdb0;
+            padding-left: 0.8rem;
         }
+        .card-content {
+            color: #3e4a3a;
+        }
+        .card-content p {
+            margin: 0.5rem 0;
+        }
+        a {
+            color: #7c5e3a;
+            text-decoration: none;
+            border-bottom: 1px dotted #d4c5ae;
+        }
+        a:hover {
+            color: #4f6b3a;
+            border-bottom-color: #4f6b3a;
+        }
+
+        /* 笔记列表容器 */
+        .notes-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+        .note-item {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1rem 1.4rem;
+            transition: background 0.15s;
+            border: 1px solid #f0eadf;
+        }
+        .note-item:hover {
+            background: #fefcf7;
+            border-color: #e2d5c0;
+        }
+        .note-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            font-family: Georgia, serif;
+            margin-bottom: 0.3rem;
+        }
+        .note-date {
+            font-size: 0.8rem;
+            color: #b2a18b;
+            letter-spacing: 0.3px;
+        }
+        .note-title a {
+            border-bottom: none;
+        }
+
         .footer {
             margin-top: 3rem;
             text-align: center;
-            color: #b0a28a;
-            font-size: 0.9rem;
-            border-top: 1px solid #e6e0d4;
-            padding-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #b8a992;
+            border-top: 1px solid #ece3d7;
+            padding-top: 1.8rem;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1.2rem;
+            }
+            .card {
+                padding: 1.4rem;
+            }
+            .note-title {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>📖 程素婷的英语阅读试验</h1>
-    <div class="subtitle">从王尔德的《自深深处》开始，一句一句拆</div>
+<div class="container">
+    <header>
+        <h1>📖 程素婷的英语阅读试验</h1>
+        <div class="sub">从《自深深处》开始 · 一句一句拆</div>
+    </header>
 
+    <!-- 固定卡片：当前阅读状态 -->
     <div class="card">
-        <h2>📌 正在阅读</h2>
-        <p>《自深深处》（De Profundis）—— 奥斯卡·王尔德</p>
-        <p>状态：拆解中 🚀</p>
+        <div class="card-title">📌 正在阅读</div>
+        <div class="card-content">
+            <p><strong>《自深深处》</strong> —— 奥斯卡·王尔德</p>
+            <p>拆解中 · 持续更新</p>
+        </div>
     </div>
 
+    <!-- 所有笔记列表 (自动加载 notes_list.json) -->
     <div class="card">
-        <h2>📝 所有笔记</h2>
-        <div id="note-list-container">
-            <ul class="note-list" id="note-list">
-                <li>📡 正在加载笔记列表...</li>
-            </ul>
+        <div class="card-title">📝 阅读笔记</div>
+        <div id="notes-container" class="notes-grid">
+            <div class="note-item">加载笔记中…</div>
         </div>
     </div>
 
     <div class="footer">
-        🌱 每天拆一句，慢慢来，比较快<br>
-        2026 · 程素婷的阅读角落
+        🌱 每天一句 · 慢慢来 · 比较快<br>
+        2026 · 程素婷
     </div>
+</div>
 
-    <script>
-        // 读取本地 notes_list.json 文件
-        fetch('notes_list.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+<script>
+    // 自动从 notes_list.json 加载笔记列表
+    fetch('notes_list.json')
+        .then(res => {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        })
+        .then(notes => {
+            const container = document.getElementById('notes-container');
+            if (!notes || notes.length === 0) {
+                container.innerHTML = '<div class="note-item">📭 还没有笔记，写第一篇吧。</div>';
+                return;
+            }
+            // 按修改时间倒序（最新的在前）
+            notes.sort((a, b) => b.mod_time - a.mod_time);
+            const html = notes.map(note => {
+                // 文件名可能包含日期，试着提取 (例如 2026-04-12.md)
+                let date = '';
+                const match = note.title.match(/(\d{4}-\d{2}-\d{2})/);
+                if (match) date = match[1];
+                // 标题：去掉日期前缀，使其简洁
+                let displayTitle = note.title;
+                if (date && displayTitle.startsWith(date)) {
+                    displayTitle = displayTitle.slice(date.length).replace(/^[-_\s]+/, '');
                 }
-                return response.json();
-            })
-            .then(notes => {
-                const listContainer = document.getElementById('note-list');
-                if (!notes || notes.length === 0) {
-                    listContainer.innerHTML = '<li>📭 还没有笔记，快写下你的第一篇吧！</li>';
-                    return;
-                }
-                
-                const listHtml = notes.map(note => {
-                    // 对文件名进行编码，确保链接正确
-                    const encodedFile = encodeURIComponent(note.file);
-                    return `<li><a href="${encodedFile}">📄 ${note.title}</a></li>`;
-                }).join('');
-                
-                listContainer.innerHTML = listHtml;
-            })
-            .catch(error => {
-                console.error('加载笔记列表失败:', error);
-                document.getElementById('note-list').innerHTML = '<li>⚠️ 加载失败，请尝试刷新页面。</li>';
-            });
-    </script>
+                if (!displayTitle) displayTitle = note.title;
+                return `
+                    <div class="note-item">
+                        <div class="note-title"><a href="${note.file}">📄 ${displayTitle}</a></div>
+                        ${date ? `<div class="note-date">${date}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('加载笔记失败:', err);
+            document.getElementById('notes-container').innerHTML = '<div class="note-item">⚠️ 暂时无法加载笔记，请刷新页面重试。</div>';
+        });
+</script>
 </body>
 </html>
