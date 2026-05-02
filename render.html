@@ -41,7 +41,6 @@
             font-family: monospace;
         }
         pre { padding: 1rem; overflow-x: auto; }
-        /* 表格样式 */
         table {
             border-collapse: collapse;
             width: 100%;
@@ -67,6 +66,13 @@
             .back-link, .footer { color: #9e9e9e; }
             a { color: #dbb87c; }
         }
+        .error-box {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
     </style>
 </head>
 <body>
@@ -76,24 +82,29 @@
     <div class="footer">程素婷 · 英语阅读试验</div>
 </div>
 <script>
-    const params = new URLSearchParams(window.location.search);
-    const file = params.get('file');
-    if (!file) {
-        document.getElementById('markdown-content').innerHTML = '<p>⚠️ 未指定笔记文件。</p>';
-    } else {
-        fetch(file)
-            .then(res => {
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return res.text();
-            })
-            .then(md => {
-                const html = marked.parse(md);
-                document.getElementById('markdown-content').innerHTML = html;
-            })
-            .catch(err => {
-                document.getElementById('markdown-content').innerHTML = `<p>❌ 加载失败: ${err.message}</p>';
-            });
-    }
+    (async function() {
+        const params = new URLSearchParams(window.location.search);
+        let file = params.get('file');
+        const contentDiv = document.getElementById('markdown-content');
+        if (!file) {
+            contentDiv.innerHTML = '<div class="error-box">⚠️ 未指定笔记文件。</div>';
+            return;
+        }
+        // 确保路径正确：如果 file 是相对于根目录的，直接 fetch
+        // 如果是类似 "literature/2026-04-12.md" 的格式，没问题
+        try {
+            const response = await fetch(file);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            const markdown = await response.text();
+            const html = marked.parse(markdown);
+            contentDiv.innerHTML = html;
+        } catch (err) {
+            console.error('加载失败:', err);
+            contentDiv.innerHTML = `<div class="error-box">❌ 加载失败: ${err.message}<br>文件路径: ${file}</div>`;
+        }
+    })();
 </script>
 </body>
 </html>
