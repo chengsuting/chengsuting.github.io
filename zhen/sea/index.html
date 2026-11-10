@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#020811">
+  <meta name="color-scheme" content="dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="一帧海：桢·真的一件深海互动小作品。Q 版海豚、晶体莲，和一整片安静的海。">
+  <link rel="icon" href="../logo.svg" type="image/svg+xml">
+  <title>一帧海 | 桢·真</title>
+  <style>
+    :root{
+      --ink:#020811;
+      --ice:#e9fdff;
+      --mist:rgba(198,239,255,.58);
+      --line:rgba(142,230,255,.18);
+      --cyan:#88f5ff;
+      --blue:#4d9cff;
+      --gold:#ffe2a8;
+      --safe-top:env(safe-area-inset-top, 0px);
+      --safe-bottom:env(safe-area-inset-bottom, 0px);
+    }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--ink);}
+    body{
+      position:fixed;
+      inset:0;
+      color:var(--ice);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro SC","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+      touch-action:none;
+      overscroll-behavior:none;
+      user-select:none;
+      -webkit-user-select:none;
+      background:
+        radial-gradient(34% 54% at 50% 79%, rgba(92,218,255,.105) 0%, rgba(48,155,220,.035) 44%, transparent 74%),
+        radial-gradient(12% 46% at 50% 74%, rgba(180,250,255,.045) 0%, transparent 72%),
+        radial-gradient(120% 82% at 50% -12%, rgba(26,126,187,.30) 0%, rgba(3,20,38,0) 56%),
+        radial-gradient(90% 62% at 50% 108%, rgba(0,170,193,.13) 0%, rgba(0,28,45,0) 72%),
+        linear-gradient(180deg,#020813 0%,#041a2b 40%,#02101e 72%,#01060d 100%);
+    }
+
+    /* 深海环境光全部交给 CSS：静态渐变 + 仅 transform 的缓慢漂浮，不占 Canvas 绘制预算 */
+    .sea{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+    .sea::after{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        radial-gradient(ellipse at 50% 42%, transparent 34%, rgba(0,3,10,.32) 74%, rgba(0,2,7,.72) 100%),
+        linear-gradient(180deg, rgba(0,8,18,.15), rgba(0,3,8,.55));
+    }
+    .glow-orb{
+      position:absolute;
+      border-radius:50%;
+      mix-blend-mode:screen;
+      opacity:.8;
+      will-change:transform;
+      animation:drift 28s ease-in-out infinite alternate;
+    }
+    .glow-orb.a{
+      width:78vmax;height:78vmax;left:-30vmax;top:-36vmax;
+      background:radial-gradient(circle, rgba(22,110,179,.22) 0%, rgba(9,48,90,.08) 42%, transparent 68%);
+    }
+    .glow-orb.b{
+      width:65vmax;height:65vmax;right:-30vmax;bottom:-20vmax;
+      background:radial-gradient(circle, rgba(0,183,205,.11) 0%, rgba(0,71,116,.06) 44%, transparent 70%);
+      animation-duration:36s;animation-delay:-12s;
+    }
+    .glow-orb.c{
+      width:34vmax;height:34vmax;left:26%;bottom:8%;
+      background:radial-gradient(circle, rgba(132,237,255,.075) 0%, transparent 70%);
+      animation-duration:22s;animation-delay:-6s;
+    }
+    @keyframes drift{
+      from{transform:translate3d(-1.5%,0,0) scale(.97);}
+      to{transform:translate3d(2.5%,3.5%,0) scale(1.04);}
+    }
+    .scanlines{
+      position:fixed;inset:0;pointer-events:none;z-index:2;opacity:.22;
+      background:repeating-linear-gradient(180deg, rgba(174,239,255,.035) 0 1px, transparent 1px 5px);
+      mix-blend-mode:screen;
+    }
+
+    #stage{
+      position:fixed;inset:0;display:block;width:100%;height:100%;
+      z-index:1;
+      outline:none;
+    }
+
+    .hud{
+      position:fixed;inset:0;z-index:3;pointer-events:none;
+      padding:calc(var(--safe-top) + 22px) 22px calc(var(--safe-bottom) + 20px);
+      display:flex;justify-content:space-between;align-items:flex-start;
+    }
+    .brand{display:flex;align-items:flex-start;gap:12px;}
+    .brand-rule{width:1px;height:44px;margin-top:2px;background:linear-gradient(180deg,var(--cyan),rgba(106,220,255,0));opacity:.5;}
+    .eyebrow{
+      margin:0 0 8px;
+      font-size:8px;line-height:1;letter-spacing:.34em;font-weight:500;
+      color:rgba(173,235,255,.48);text-transform:uppercase;
+    }
+    .brand h1{
+      margin:0;
+      font-size:21px;line-height:1;font-weight:400;letter-spacing:.16em;
+      color:rgba(238,253,255,.94);
+      text-shadow:0 0 22px rgba(88,220,255,.28);
+    }
+    .brand .sub{
+      display:inline-block;margin-left:9px;
+      font-size:9px;letter-spacing:.14em;color:rgba(179,234,255,.42);
+    }
+    .hint{
+      margin:13px 0 0;
+      font-size:10px;line-height:1.85;letter-spacing:.08em;
+      color:rgba(177,228,248,.38);
+      transition:opacity 1.1s ease;
+      max-width:230px;
+    }
+    .hint b{font-weight:400;color:rgba(219,249,255,.67);}
+    body.engaged .hint{opacity:0;}
+    .telemetry{
+      display:flex;align-items:center;gap:8px;
+      padding-top:6px;
+      font-size:8px;line-height:1;letter-spacing:.2em;
+      color:rgba(168,226,245,.38);
+      text-transform:uppercase;
+    }
+    .telemetry i{
+      display:block;width:5px;height:5px;border-radius:50%;
+      background:rgba(132,246,255,.92);
+      box-shadow:0 0 12px rgba(104,238,255,.75);
+      animation:signal 3.6s ease-in-out infinite;
+    }
+    @keyframes signal{
+      0%,100%{opacity:.4;transform:scale(.8);}
+      50%{opacity:1;transform:scale(1);}
+    }
+
+    .status{
+      position:fixed;left:22px;bottom:calc(var(--safe-bottom) + 22px);z-index:3;
+      display:flex;align-items:center;gap:9px;pointer-events:none;
+      font-size:9px;line-height:1;letter-spacing:.22em;
+      color:rgba(178,230,248,.42);
+      text-transform:uppercase;
+    }
+    .status i{
+      width:4px;height:4px;border-radius:50%;
+      background:var(--cyan);
+      box-shadow:0 0 10px rgba(99,238,255,.85);
+      transition:background .5s ease,box-shadow .5s ease;
+    }
+    .status b{font-weight:400;transition:color .4s ease;}
+    .shore-link{
+      position:fixed;right:20px;bottom:calc(var(--safe-bottom) + 18px);z-index:4;
+      display:inline-flex;align-items:center;gap:7px;
+      padding:8px 12px 8px 10px;
+      color:rgba(205,244,255,.52);
+      border:1px solid rgba(142,230,255,.16);
+      border-radius:999px;
+      background:rgba(2,10,22,.28);
+      backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+      text-decoration:none;
+      font-size:10px;letter-spacing:.14em;
+      transition:color .25s ease,border-color .25s ease,background .25s ease;
+    }
+    .shore-link:hover,.shore-link:focus-visible{
+      color:rgba(238,253,255,.95);
+      border-color:rgba(142,230,255,.44);
+      background:rgba(2,18,34,.56);
+      outline:none;
+    }
+    body.embed .shore-link{display:none;}
+    body[data-state="poke"] .status i,
+    body[data-state="spit"] .status i{background:#fff;box-shadow:0 0 14px #bff8ff;}
+    body[data-state="feed"] .status i,
+    body[data-state="offer"] .status i{background:var(--gold);box-shadow:0 0 12px rgba(255,224,152,.9);}
+    body[data-state="sleep"] .status i{background:rgba(128,172,193,.5);box-shadow:none;}
+
+    .vignette{
+      position:fixed;inset:0;z-index:2;pointer-events:none;
+      box-shadow:inset 0 0 120px rgba(0,2,8,.58);
+    }
+
+    @media (max-height:700px){
+      .hud{padding-top:calc(var(--safe-top) + 16px);}
+      .hint{margin-top:9px;line-height:1.6;}
+      .brand-rule{height:37px;}
+    }
+    @media (max-width:360px){
+      .hud{padding-left:17px;padding-right:17px;}
+      .brand h1{font-size:17px;letter-spacing:.2em;}
+      .brand .sub{display:none;}
+      .status{left:17px;}
+      .telemetry span{display:none;}
+    }
+    @media (prefers-reduced-motion:reduce){
+      .glow-orb{animation:none;}
+      .telemetry i{animation:none;opacity:.75;}
+    }
+    /* 手机上停掉大面积环境光的 120Hz 合成，只保留静态深海层次 */
+    @media (pointer:coarse){
+      .glow-orb{animation:none;will-change:auto;}
+    }
+    body.low-power .glow-orb{animation:none;will-change:auto;}
+    body.low-power .scanlines{opacity:.13;}
+  </style>
+</head>
+<body data-state="patrol">
+  <script>if (new URLSearchParams(location.search).has('embed')) document.body.classList.add('embed');</script>
+  <div class="sea" aria-hidden="true">
+    <i class="glow-orb a"></i>
+    <i class="glow-orb b"></i>
+    <i class="glow-orb c"></i>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+  </div>
+
+  <canvas id="stage" role="img" aria-label="深海中，一只Q版海豚在蓝色晶体莲上方巡游。轻触海豚读取一句深梦，点按水面投喂光斑，滑动手指为它引路。"></canvas>
+
+  <div class="hud" aria-hidden="true">
+    <div class="brand">
+      <i class="brand-rule"></i>
+      <div>
+        <p class="eyebrow">桢 · 真</p>
+        <h1>一帧海</h1>
+        <p class="hint"><b>轻触海豚</b>读取深梦 · <b>点按水面</b>投喂光斑<br><b>滑动引路</b>，与它同游</p>
+      </div>
+    </div>
+    <div class="telemetry"><i></i><span>No. 07</span></div>
+  </div>
+
+  <a class="shore-link" href="../playground.html">← 岸边</a>
+  <div class="status" aria-hidden="true"><i></i><b id="statusText">巡游中</b></div>
+  <div id="liveRegion" class="sr-only" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;"></div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    /* ─────────────────────────────────────────────────────────────
+       0. 可调参数
+       DREAM_API_URL 留空时会使用本地「深梦」语料，方便直接跑通；
+       接入真实接口时填写返回 JSON 的同源 / CORS 地址即可。
+       ───────────────────────────────────────────────────────────── */
+    const CONFIG = Object.freeze({
+      DREAM_API_URL: '',
+      DREAM_TIMEOUT_MS: 2600,
+      MIN_LOADING_MS: 900,
+      CARD_LIFE_SEC: 7.2,
+      LOTUS_GLOW_MAX: 9,
+      OFFER_ORBS: 3,
+      SLEEP_AFTER_SEC: 27,
+      MAX_PARTICLE: 140,
+      MAX_DPR: 1.6
+    });
+
+    const LOCAL_DREAMS = [
+      '梦是深海里不发声的潮汐，等你靠近，才肯漫过脚踝。',
+      '她把最后一盏灯放进它怀里，整片海便有了心跳。',
+      '所有走失的句子，最后都会游回写下它的人身边。',
+      '月亮沉进水里的时候，海豚替它保管了一小片光。',
+      '你听见的寂静，其实是海在缓慢地翻页。',
+      '有些愿望不必说出口，光斑会替我们记住方向。',
+      '莲在夜里练习绽放，它在夜里练习遗忘。',
+      '我们隔着水波相认，像两粒终于找到彼此的尘埃。'
+    ];
+
+    const TAU = Math.PI * 2;
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const damp = (a, b, lambda, dt) => lerp(a, b, 1 - Math.exp(-lambda * dt));
+    const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+    const easeInOutCubic = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+    const fishImage = new Image();
+    let fishReady = false;
+    fishImage.decoding = 'async';
+    fishImage.onload = () => { fishReady = true; };
+    fishImage.onerror = () => { console.warn('fish.png 加载失败，暂时使用旧版矢量鱼。'); };
+    fishImage.src = 'fish.png';
+
+    const lotusImage = new Image();
+    let lotusReady = false;
+    lotusImage.decoding = 'async';
+    lotusImage.onload = () => { lotusReady = true; };
+    lotusImage.onerror = () => { console.warn('lotus.png 加载失败，暂时使用晶体矢量莲。'); };
+    lotusImage.src = 'lotus.png';
+
+    const jellyImage = new Image();
+    let jellyReady = false;
+    jellyImage.decoding = 'async';
+    jellyImage.onload = () => { jellyReady = true; };
+    jellyImage.src = 'jellyfish.png';
+
+    const littleFishImage = new Image();
+    let littleFishReady = false;
+    littleFishImage.decoding = 'async';
+    littleFishImage.onload = () => { littleFishReady = true; };
+    littleFishImage.src = 'little-fish.png';
+
+    const dolphinIdle = new Image();
+    const dolphinHappy = new Image();
+    const dolphinSleep = new Image();
+    let dolphinIdleReady = false;
+    let dolphinHappyReady = false;
+    let dolphinSleepReady = false;
+    dolphinIdle.onload = () => { dolphinIdleReady = true; };
+    dolphinHappy.onload = () => { dolphinHappyReady = true; };
+    dolphinSleep.onload = () => { dolphinSleepReady = true; };
+    dolphinIdle.src = 'dolphin-idle.png';
+    dolphinHappy.src = 'dolphin-happy.png';
+    dolphinSleep.src = 'dolphin-sleep.png';
+    const statusText = document.getElementById('statusText');
+    const liveRegion = document.getElementById('liveRegion');
+    const hint = document.querySelector('.hint');
+    const query = new URLSearchParams(location.search);
+    const DEBUG = query.get('debug') === '1';
+    const DEBUG_OVERLAY = DEBUG && query.get('overlay') !== '0';
+
+    if (!ctx) {
+      document.body.insertAdjacentHTML('beforeend', '<p style="position:fixed;inset:0;display:grid;place-items:center;color:#dff;font:14px sans-serif;">当前浏览器不支持 Canvas 2D</p>');
+      return;
+    }
+
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cores = navigator.hardwareConcurrency || 8;
+    const memory = navigator.deviceMemory || 8;
+    const LOW_POWER = reducedMotion || cores <= 4 || memory <= 4;
+    const MAX_DPR = LOW_POWER ? 1.25 : CONFIG.MAX_DPR;
+    if (LOW_POWER) document.body.classList.add('low-power');
+
+    const view = {
+      w: 0, h: 0, dpr: 1,
+      safeTop: 0, safeBottom: 0
+    };
+
+    const clock = { t: 0, last: 0, lastRender: 0, raf: 0, paused: false };
+    let state = 'patrol';
+    let stateTime = 0;
+    let lastInput = 0;
+    let followUntil = 0;
+    let dreamToken = 0;
+
+    const whale = {
+      x: 0, y: 0, vx: 0, vy: 0, scale: 1,
+      tilt: 0, targetTilt: 0, visualFlip: 1, targetFlip: 1,
+      tailPhase: 0, trailClock: 0, glow: 1,
+      waypoint: null, nextBlink: 2.2, blink: 0
+    };
+
+    const lotus = {
+      x: 0, y: 0, scale: .8,
+      energy: 0, pulse: 0
+    };
+
+    const dream = {
+      text: '', loaded: false, loadStart: 0,
+      reveal: 0, card: null, popAt: 0
+    };
+
+    let bubble = null;
+    let food = null;
+    let feedPhase = 'seek';
+    const offer = { phase: 'swim', emitted: 0, timer: 0 };
+    const orbs = [];
+
+    const pointer = {
+      active: false, id: null, mode: 'none',
+      x: 0, y: 0, startX: 0, startY: 0,
+      lastX: 0, lastY: 0, lastMoveAt: 0, vx: 0, vy: 0, moved: false
+    };
+
+    const STATUS = {
+      patrol: ['巡游中', '海豚正在深海中巡游。'],
+      poke: ['读取深梦', '海豚停住了，正在读取一段深梦。'],
+      spit: ['吐出梦境', '一个发光泡泡正从海豚口中升起。'],
+      feed: ['追光', '海豚正向你投下的光斑游去。'],
+      offer: ['向莲献光', '海豚把光点送入晶体莲。'],
+      follow: ['随指而游', '海豚正跟随你的指尖。'],
+      sleep: ['安眠', '海豚安静地睡着了，碰一碰就会醒来。']
+    };
+
+    const FIG = {
+      body: 'rgba(8,46,79,.88)',
+      bodyLight: 'rgba(31,121,174,.24)',
+      cyan: 'rgba(125,241,255,.9)',
+      white: 'rgba(235,254,255,.9)'
+    };
+
+    /* ─────────────────────────────────────────────────────────────
+       1. 预渲染发光贴图：替代逐帧 shadowBlur / filter，
+          手机上这部分是发热差异最大的地方。
+       ───────────────────────────────────────────────────────────── */
+    const glowSprites = {};
+
+    function makeGlowSprite(inner, mid, outer) {
+      const c = document.createElement('canvas');
+      c.width = 128;
+      c.height = 128;
+      const g = c.getContext('2d');
+      const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      grad.addColorStop(0, inner);
+      grad.addColorStop(.18, mid);
+      grad.addColorStop(.52, outer);
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 128, 128);
+      return c;
+    }
+
+    glowSprites.cyan = makeGlowSprite('rgba(218,254,255,.95)', 'rgba(91,225,255,.42)', 'rgba(19,126,210,.10)');
+    glowSprites.gold = makeGlowSprite('rgba(255,251,229,.98)', 'rgba(255,218,138,.46)', 'rgba(255,155,57,.10)');
+    glowSprites.white = makeGlowSprite('rgba(255,255,255,1)', 'rgba(209,248,255,.4)', 'rgba(105,219,255,.08)');
+    glowSprites.pink = makeGlowSprite('rgba(255,246,250,.98)', 'rgba(255,172,214,.38)', 'rgba(178,86,190,.08)');
+
+    function drawGlow(key, x, y, size, alpha) {
+      const previousAlpha = ctx.globalAlpha;
+      ctx.globalAlpha = previousAlpha * alpha;
+      ctx.drawImage(glowSprites[key] || glowSprites.cyan, x - size / 2, y - size / 2, size, size);
+      ctx.globalAlpha = previousAlpha;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       2. 视口、安全区与响应式尺寸
+       ───────────────────────────────────────────────────────────── */
+    const safeProbe = document.createElement('div');
+    safeProbe.style.cssText = 'position:fixed;inset:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);';
+    document.body.appendChild(safeProbe);
+
+    function readSafeArea() {
+      const cs = getComputedStyle(safeProbe);
+      view.safeTop = parseFloat(cs.paddingTop) || 0;
+      view.safeBottom = parseFloat(cs.paddingBottom) || 0;
+    }
+
+    function resize() {
+      readSafeArea();
+      view.w = Math.max(300, window.innerWidth);
+      view.h = Math.max(300, window.innerHeight);
+      view.dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+
+      canvas.width = Math.round(view.w * view.dpr);
+      canvas.height = Math.round(view.h * view.dpr);
+      canvas.style.width = view.w + 'px';
+      canvas.style.height = view.h + 'px';
+      ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+
+      whale.scale = clamp(Math.min(view.w, view.h) / 780 + .34, .61, 1.04);
+      lotus.scale = clamp(whale.scale * 1.30, .72, 1.24);
+      lotus.x = view.w * .5;
+      lotus.y = view.h - view.safeBottom - 92;
+
+      if (!whale.x) {
+        whale.x = view.w * .44;
+        whale.y = view.h * .42;
+        whale.waypoint = null;
+      } else {
+        whale.x = clamp(whale.x, 100, view.w - 100);
+        whale.y = clamp(whale.y, view.safeTop + 120, lotus.y - 120);
+      }
+
+      if (food) {
+        const b = swimBounds();
+        food.x = clamp(food.x, 40, view.w - 40);
+        food.y = clamp(food.y, b.top, b.bottom);
+      }
+      if (dream.card) layoutCard(dream.card.text, dream.card.anchor);
+      if (DEBUG_OVERLAY) resizeDebug();
+    }
+
+    function swimBounds() {
+      const left = Math.max(82, 142 * whale.scale);
+      const right = view.w - Math.max(82, 120 * whale.scale);
+      const top = Math.max(view.safeTop + 118, view.h * .18);
+      const bottom = Math.max(top + 70, lotus.y - 160 * whale.scale);
+      return { left, right, top, bottom };
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       3. 状态机
+       patrol → poke(Loading) → spit → patrol
+       patrol → feed(seek/chew) → offer(献光) → patrol
+       patrol ↔ follow；长时间无操作 → sleep
+       ───────────────────────────────────────────────────────────── */
+    function setState(next) {
+      if (state === next && next !== 'poke') return;
+      state = next;
+      stateTime = 0;
+      const meta = STATUS[next] || ['巡游中', ''];
+      statusText.textContent = meta[0];
+      liveRegion.textContent = meta[1];
+      document.body.dataset.state = next;
+    }
+
+    function enterPatrol() {
+      setState('patrol');
+      whale.waypoint = null;
+      pointer.mode = pointer.mode === 'follow' ? 'none' : pointer.mode;
+    }
+
+    function pickWaypoint() {
+      const b = swimBounds();
+      const span = Math.max(30, b.right - b.left);
+      const previous = whale.x;
+      let x = lerp(b.left + 22, b.right - 22, Math.random());
+      // 尽量让目标位于身体前方，减少来回抽搐式掉头
+      if (Math.abs(x - previous) < span * .22) {
+        x = previous + (previous < view.w / 2 ? 1 : -1) * span * (.28 + Math.random() * .26);
+      }
+      x = clamp(x, b.left + 18, b.right - 18);
+      const y = lerp(b.top + 16, b.bottom - 16, Math.random());
+      whale.waypoint = {
+        x, y,
+        expire: clock.t + 4.5 + Math.random() * 4.5
+      };
+    }
+
+    function steerTo(tx, ty, maxSpeed, dt, response) {
+      const dx = tx - whale.x;
+      const dy = ty - whale.y;
+      const dist = Math.hypot(dx, dy) || .001;
+      const arrival = clamp(dist / 56, .12, 1);
+      const desiredX = dx / dist * maxSpeed * arrival;
+      const desiredY = dy / dist * maxSpeed * arrival;
+      const k = 1 - Math.exp(-response * dt);
+      whale.vx += (desiredX - whale.vx) * k;
+      whale.vy += (desiredY - whale.vy) * k;
+      whale.x += whale.vx * dt;
+      whale.y += whale.vy * dt;
+      return dist;
+    }
+
+    function brake(dt, lambda = 8) {
+      whale.vx = damp(whale.vx, 0, lambda, dt);
+      whale.vy = damp(whale.vy, 0, lambda, dt);
+      whale.x += whale.vx * dt;
+      whale.y += whale.vy * dt;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       4. 寻光 / 吃食 / 献光
+       ───────────────────────────────────────────────────────────── */
+    function spawnFood(x, y) {
+      const b = swimBounds();
+      // 光斑必须落在鲸鱼可达范围内，否则它会一直贴着边界追不到食物
+      const reachableX = clamp(x, b.left + 4, b.right - 4);
+      const reachableY = clamp(y, b.top + 10, b.bottom - 10);
+
+      if (state === 'feed' && feedPhase === 'seek' && food) {
+        food.x = reachableX;
+        food.y = reachableY;
+        spawnRing(food.x, food.y, 'gold', 8, 46, .7, 1.2);
+        lastInput = clock.t;
+        return;
+      }
+      if (!['patrol', 'sleep', 'follow'].includes(state)) {
+        spawnRing(x, y, 'cyan', 5, 28, .55, .9);
+        return;
+      }
+      if (state === 'sleep') wake();
+      dismissCard();
+      document.body.classList.add('engaged');
+
+      food = {
+        x: reachableX,
+        y: reachableY,
+        age: 0
+      };
+      feedPhase = 'seek';
+      setState('feed');
+      lastInput = clock.t;
+      spawnRing(food.x, food.y, 'gold', 9, 58, .9, 1.6);
+      spawnRing(food.x, food.y, 'white', 20, 34, .6, .8);
+    }
+
+    function updateFeed(dt) {
+      if (feedPhase === 'seek') {
+        if (!food) {
+          enterPatrol();
+          return;
+        }
+        food.age += dt;
+        const dist = Math.hypot(food.x - whale.x, food.y - whale.y);
+        if (dist < 33 * whale.scale) {
+          const m = mouthPos();
+          spawnBurst(m.x, m.y, 'gold', 8, 70, 28);
+          spawnRing(m.x, m.y, 'white', 3, 32, .5, 1.1);
+          whale.glow = 1.5;
+          food = null;
+          feedPhase = 'chew';
+          stateTime = 0;
+          liveRegion.textContent = '海豚吞下一枚光斑。';
+        } else {
+          steerTo(food.x, food.y, 164, dt, 4.6);
+        }
+      } else {
+        brake(dt, 9);
+        if (stateTime > .62) startOffer();
+      }
+    }
+
+    function startOffer() {
+      setState('offer');
+      offer.phase = 'swim';
+      offer.emitted = 0;
+      offer.timer = 0;
+    }
+
+    function offerTarget() {
+      return {
+        x: lotus.x - 86 * whale.scale,
+        y: lotus.y - 168 * whale.scale
+      };
+    }
+
+    function updateOffer(dt) {
+      const target = offerTarget();
+      if (offer.phase === 'swim') {
+        const dist = steerTo(target.x, target.y, 154, dt, 4.4);
+        if (dist < 24 || stateTime > 4.4) {
+          offer.phase = 'hold';
+          stateTime = 0;
+        }
+      } else if (offer.phase === 'hold') {
+        brake(dt, 10);
+        if (stateTime > .34) {
+          offer.phase = 'emit';
+          stateTime = 0;
+          offer.timer = 0;
+        }
+      } else {
+        brake(dt, 10);
+        offer.timer += dt;
+        if (offer.emitted < CONFIG.OFFER_ORBS && offer.timer > .22) {
+          offer.timer = 0;
+          spawnOrb();
+          offer.emitted += 1;
+        }
+        if (offer.emitted >= CONFIG.OFFER_ORBS && stateTime > 1.55) {
+          enterPatrol();
+          pickWaypoint();
+        }
+      }
+    }
+
+    function spawnOrb() {
+      const m = mouthPos();
+      const ex = lotus.x + (Math.random() - .5) * 20 * lotus.scale;
+      const ey = lotus.y - 20 * lotus.scale + (Math.random() - .5) * 6;
+      orbs.push({
+        sx: m.x, sy: m.y,
+        cx: lerp(m.x, ex, .5) + (Math.random() - .5) * 18,
+        cy: Math.min(m.y, ey) - 42 - Math.random() * 16,
+        ex, ey,
+        t: 0,
+        dur: .86 + Math.random() * .18,
+        trailClock: 0
+      });
+      spawnBurst(m.x, m.y, 'gold', 3, 30, 14);
+    }
+
+    function updateOrbs(dt) {
+      for (let i = orbs.length - 1; i >= 0; i--) {
+        const o = orbs[i];
+        o.t += dt;
+        o.trailClock += dt;
+        if (o.trailClock > .1) {
+          o.trailClock = 0;
+          const p = orbPoint(o, o.t / o.dur);
+          spawnParticle({
+            type: 'glow', x: p.x, y: p.y,
+            vx: (Math.random() - .5) * 8, vy: -4 - Math.random() * 5,
+            size: 5 + Math.random() * 5, growth: .8,
+            life: .5 + Math.random() * .3, color: 'gold', alpha: .34, drag: 1.5
+          });
+        }
+        if (o.t >= o.dur) {
+          spawnRing(lotus.x, lotus.y - 25 * lotus.scale, 'gold', 6, 48, .8, 1.4);
+          spawnBurst(lotus.x, lotus.y - 28 * lotus.scale, 'white', 5, 42, 18);
+          addLotusLight(1);
+          orbs.splice(i, 1);
+        }
+      }
+    }
+
+    function orbPoint(o, t) {
+      const u = 1 - t;
+      return {
+        x: u * u * o.sx + 2 * u * t * o.cx + t * t * o.ex,
+        y: u * u * o.sy + 2 * u * t * o.cy + t * t * o.ey
+      };
+    }
+
+    function addLotusLight(n) {
+      const before = lotus.energy;
+      lotus.energy = Math.min(CONFIG.LOTUS_GLOW_MAX, lotus.energy + n);
+      lotus.pulse = 1;
+      const gain = lotus.energy - before;
+      if (gain <= 0) return;
+      // 光点不再触发“开花”，只让晶体莲的整圈光晕变大、变亮。
+      spawnRing(lotus.x, lotus.y - 24 * lotus.scale, 'white', 6, 54 + gain * 22, .8, 1.2);
+      spawnBurst(lotus.x, lotus.y - 26 * lotus.scale, 'cyan', 5 + gain * 2, 34 + gain * 10, 16);
+      liveRegion.textContent = '光点融入晶体莲，光晕扩大了。';
+      if (navigator.vibrate && !reducedMotion) navigator.vibrate(8);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       5. 戳鱼：异步取一句「小说梦话」
+       ───────────────────────────────────────────────────────────── */
+    function pokeWhale() {
+      if (!['patrol', 'sleep', 'follow'].includes(state)) return;
+      if (state === 'sleep') wake();
+      if (pointer.mode === 'follow') pointer.mode = 'none';
+      dismissCard();
+      setState('poke');
+      lastInput = clock.t;
+      whale.vx *= .25;
+      whale.vy *= .25;
+      dream.text = '';
+      dream.loaded = false;
+      dream.loadStart = clock.t;
+      dream.popAt = 0;
+      dream.reveal = 0;
+      bubble = null;
+      document.body.classList.add('engaged');
+      spawnRing(whale.x, whale.y, 'cyan', 12, 66, .8, 1.2);
+      requestDream(++dreamToken);
+    }
+
+    function extractDream(data) {
+      if (!data) return '';
+      if (typeof data === 'string') return data;
+      const candidate = data.text || data.dream || data.message ||
+        (data.data && (data.data.text || data.data.dream)) || '';
+      return typeof candidate === 'string' ? candidate : '';
+    }
+
+    function normalizeDream(raw) {
+      if (typeof raw !== 'string') return '';
+      return raw
+        .replace(/[\u0000-\u001f\u007f]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 68);
+    }
+
+    function localDream() {
+      return LOCAL_DREAMS[Math.floor(Math.random() * LOCAL_DREAMS.length)];
+    }
+
+    async function requestDream(token) {
+      let text = '';
+
+      if (CONFIG.DREAM_API_URL) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), CONFIG.DREAM_TIMEOUT_MS);
+        try {
+          const sep = CONFIG.DREAM_API_URL.includes('?') ? '&' : '?';
+          const res = await fetch(CONFIG.DREAM_API_URL + sep + 'ts=' + Date.now(), {
+            method: 'GET',
+            headers: { Accept: 'application/json' },
+            signal: controller.signal,
+            cache: 'no-store'
+          });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          text = normalizeDream(extractDream(data));
+        } catch (err) {
+          // 失败不打断互动，静默回落到本地语料
+          console.warn('[dream-api]', err && err.message ? err.message : err);
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      if (token !== dreamToken) return;
+      dream.text = text || normalizeDream(localDream());
+      dream.loaded = true;
+    }
+
+    function enterSpit() {
+      setState('spit');
+      const m = mouthPos();
+      bubble = {
+        x: m.x, y: m.y, x0: m.x, y0: m.y,
+        r: 5, t: 0, popped: false
+      };
+      dream.popAt = 0;
+      dream.reveal = 0;
+    }
+
+    function popBubble() {
+      if (!bubble) return;
+      const b = bubble;
+      bubble = null;
+      for (let i = 0; i < 14; i++) {
+        const a = Math.random() * TAU;
+        const speed = 20 + Math.random() * 70;
+        spawnParticle({
+          type: 'bubble',
+          x: b.x, y: b.y,
+          vx: Math.cos(a) * speed,
+          vy: Math.sin(a) * speed,
+          size: 2 + Math.random() * 5,
+          life: .45 + Math.random() * .4,
+          alpha: .55,
+          drag: 1.8
+        });
+      }
+      spawnRing(b.x, b.y, 'cyan', b.r * .9, b.r * 2.8, .55, 1.1);
+      dream.popAt = clock.t;
+      dream.reveal = 0;
+      dream.card = layoutCard(dream.text, { x: b.x, y: b.y });
+      dream.card.text = dream.text;
+      dream.card.anchor = { x: b.x, y: b.y };
+      liveRegion.textContent = dream.text;
+    }
+
+    function dismissCard() {
+      if (dream.card) dream.card.closing = true;
+    }
+
+    function updateDream(dt) {
+      if (state === 'poke') {
+        if (dream.loaded && (clock.t - dream.loadStart) * 1000 >= CONFIG.MIN_LOADING_MS) enterSpit();
+      } else if (state === 'spit') {
+        if (stateTime > 2.25) {
+          enterPatrol();
+          pickWaypoint();
+        }
+      }
+
+      if (bubble) {
+        bubble.t += dt;
+        const k = clamp(bubble.t / .92, 0, 1);
+        const e = easeOutCubic(k);
+        bubble.r = 5 + 41 * e;
+        bubble.x = bubble.x0 + Math.sin(bubble.t * 1.6) * 7;
+        bubble.y = bubble.y0 - 92 * e + Math.sin(bubble.t * 2.3) * 2.5;
+        if (bubble.t >= .95 && !bubble.popped) {
+          bubble.popped = true;
+          popBubble();
+        }
+      }
+
+      if (dream.card) {
+        const c = dream.card;
+        c.age += dt;
+        if (c.closing) {
+          c.alpha = damp(c.alpha, 0, 9, dt);
+          if (c.alpha < .02) dream.card = null;
+        } else {
+          const target = c.age > CONFIG.CARD_LIFE_SEC ? 0 : 1;
+          c.alpha = damp(c.alpha, target, c.age < .3 ? 9 : 2.4, dt);
+          if (c.age > CONFIG.CARD_LIFE_SEC + 1.2) dream.card = null;
+        }
+        if (dream.popAt && c.age < 6.4) {
+          dream.reveal = Math.min(dream.text.length, dream.reveal + dt * 34);
+        }
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       6. 指尖跟随 / 睡眠 / 巡游
+       ───────────────────────────────────────────────────────────── */
+    function enterFollow() {
+      setState('follow');
+      pointer.mode = 'follow';
+      dismissCard();
+      lastInput = clock.t;
+      whale.waypoint = null;
+    }
+
+    function updateFollow(dt) {
+      if (!pointer.active && clock.t > followUntil) {
+        enterPatrol();
+        pickWaypoint();
+        return;
+      }
+
+      const b = swimBounds();
+      const aheadX = pointer.x + pointer.vx * .075;
+      const aheadY = pointer.y + 26 + pointer.vy * .045;
+      const tx = clamp(aheadX, b.left + 12, b.right - 12);
+      const ty = clamp(aheadY, b.top + 10, b.bottom - 6);
+
+      // 临界阻尼弹簧：ω²(T−P) − 2ωV，ω = 7.2
+      const omega = 7.2;
+      const ax = omega * omega * (tx - whale.x) - 2 * omega * whale.vx;
+      const ay = omega * omega * (ty - whale.y) - 2 * omega * whale.vy;
+      whale.vx += ax * dt;
+      whale.vy += ay * dt;
+      const speed = Math.hypot(whale.vx, whale.vy);
+      if (speed > 760) {
+        whale.vx *= 760 / speed;
+        whale.vy *= 760 / speed;
+      }
+      whale.x += whale.vx * dt;
+      whale.y += whale.vy * dt;
+      lastInput = clock.t;
+    }
+
+    function enterSleep() {
+      setState('sleep');
+      whale.waypoint = null;
+      pointer.mode = 'none';
+      lastInput = clock.t;
+    }
+
+    function wake() {
+      if (state !== 'sleep') return;
+      setState('patrol');
+      lastInput = clock.t;
+      whale.waypoint = null;
+      pickWaypoint();
+      spawnRing(whale.x, whale.y, 'cyan', 10, 74, .8, 1.2);
+      liveRegion.textContent = '海豚醒了。';
+    }
+
+    function updateSleep(dt) {
+      const b = swimBounds();
+      const tx = view.w * .5 + Math.sin(clock.t * .14) * 18;
+      const ty = lerp(b.top, b.bottom, .58);
+      steerTo(tx, ty, 17, dt, 1.1);
+      // 海豚睡觉图里已经带 Z，避免再叠一层粒子 Z。
+      if (!dolphinSleepReady && clock.t > (updateSleep.nextZ || 0)) {
+        updateSleep.nextZ = clock.t + 2.6;
+        const m = localToCanvas(70, -56);
+        spawnParticle({
+          type: 'z',
+          x: m.x + 10, y: m.y - 16,
+          vx: 3, vy: -9,
+          size: 6 + Math.random() * 4,
+          life: 2.4,
+          alpha: .4,
+          drag: .1
+        });
+      }
+      if (pointer.active) wake();
+    }
+
+    function updatePatrol(dt) {
+      if (!whale.waypoint || clock.t > whale.waypoint.expire) pickWaypoint();
+      const wp = whale.waypoint;
+      const dist = Math.hypot(wp.x - whale.x, wp.y - whale.y);
+      if (dist < 25) {
+        pickWaypoint();
+      } else {
+        const wave = Math.sin(clock.t * .6) * 7;
+        steerTo(wp.x, wp.y + wave, 43, dt, 1.8);
+      }
+      if (!pointer.active && clock.t - lastInput > CONFIG.SLEEP_AFTER_SEC && !dream.card) {
+        enterSleep();
+      }
+    }
+
+    function updateWhale(dt) {
+      // 朝向：平滑翻转；转身穿过 0 的那一帧仍然保留最小宽度，避免完全消失
+      let desiredFlip = whale.visualFlip >= 0 ? 1 : -1;
+      if (state === 'offer' && offer.phase !== 'done') {
+        desiredFlip = 1;
+      } else if (pointer.active && pointer.mode === 'follow' && Math.abs(pointer.x - whale.x) > 7) {
+        desiredFlip = pointer.x < whale.x ? -1 : 1;
+      } else if (Math.abs(whale.vx) > 10) {
+        desiredFlip = whale.vx < 0 ? -1 : 1;
+      }
+      whale.targetFlip = desiredFlip;
+      whale.visualFlip = damp(whale.visualFlip, whale.targetFlip, 4.2, dt);
+
+      let desiredTilt = clamp(Math.atan2(whale.vy, Math.abs(whale.vx) + 62) * .8, -.30, .30);
+      if (state === 'offer' && offer.phase !== 'swim') desiredTilt = .10;
+      if (state === 'sleep') desiredTilt = .015;
+      whale.tilt = damp(whale.tilt, desiredTilt, 5.2, dt);
+
+      whale.tailPhase += dt * (2.5 + Math.hypot(whale.vx, whale.vy) * .035);
+      whale.glow = damp(whale.glow, state === 'sleep' ? .55 : 1, 1.8, dt);
+
+      const b = swimBounds();
+      if (whale.x < b.left) { whale.x = b.left; whale.vx = Math.abs(whale.vx) * .2; }
+      if (whale.x > b.right) { whale.x = b.right; whale.vx = -Math.abs(whale.vx) * .2; }
+      if (whale.y < b.top) { whale.y = b.top; whale.vy = Math.abs(whale.vy) * .2; }
+      if (whale.y > b.bottom) { whale.y = b.bottom; whale.vy = -Math.abs(whale.vy) * .2; }
+
+      const speed = Math.hypot(whale.vx, whale.vy);
+      whale.trailClock += dt;
+      if (speed > 24 && whale.trailClock > (LOW_POWER ? .16 : .09)) {
+        whale.trailClock = 0;
+        const p = localToCanvas(-62 - Math.random() * 18, (Math.random() - .5) * 28);
+        spawnParticle({
+          type: 'glow',
+          x: p.x, y: p.y,
+          vx: -whale.vx * .14 + (Math.random() - .5) * 9,
+          vy: -whale.vy * .14 + (Math.random() - .5) * 9,
+          size: 3 + Math.random() * 6,
+          growth: .5,
+          life: .55 + Math.random() * .5,
+          color: Math.random() > .72 ? 'white' : 'cyan',
+          alpha: .3,
+          drag: 1.4
+        });
+      }
+
+      const blinkIn = whale.nextBlink - clock.t;
+      if (blinkIn < 0) {
+        whale.nextBlink = clock.t + 2.6 + Math.random() * 4;
+        whale.blink = .16;
+      }
+      whale.blink = Math.max(0, whale.blink - dt);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       7. 粒子池：全部复用对象，避免每帧 GC 抖动
+       ───────────────────────────────────────────────────────────── */
+    const particles = [];
+    const particlePool = [];
+    const quality = { mode: LOW_POWER ? 'low' : 'high', frames: 0, elapsed: 0 };
+
+    function spawnParticle(o) {
+      if (particles.length >= (quality.mode === 'low' ? 70 : CONFIG.MAX_PARTICLE)) return;
+      const p = particlePool.pop() || {};
+      p.type = o.type || 'glow';
+      p.x = o.x; p.y = o.y;
+      p.vx = o.vx || 0; p.vy = o.vy || 0;
+      p.size = o.size || 4;
+      p.growth = o.growth || 0;
+      p.life = o.life || 1;
+      p.age = 0;
+      p.alpha = o.alpha == null ? 1 : o.alpha;
+      p.color = o.color || 'cyan';
+      p.drag = o.drag == null ? 1 : o.drag;
+      p.gravity = o.gravity || 0;
+      p.rot = o.rot || 0;
+      p.spin = o.spin || 0;
+      p.width = o.width || 1;
+      p.r0 = o.r0 || 0;
+      p.r1 = o.r1 || 40;
+      p.segment = o.segment || 0;
+      particles.push(p);
+    }
+
+    function spawnRing(x, y, color, r0, r1, life, width) {
+      spawnParticle({
+        type: 'ring', x, y, r0, r1, life,
+        color, width, alpha: .55
+      });
+    }
+
+    function spawnBurst(x, y, color, count, power, size) {
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * TAU;
+        const speed = power * (.28 + Math.random() * .72);
+        spawnParticle({
+          type: 'glow', x, y,
+          vx: Math.cos(a) * speed,
+          vy: Math.sin(a) * speed,
+          size: size * (.35 + Math.random() * .65),
+          growth: 1.2,
+          life: .55 + Math.random() * .8,
+          color, alpha: .55, drag: 1.2
+        });
+      }
+    }
+
+    function updateParticles(dt) {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.age += dt;
+        if (p.age >= p.life) {
+          particles[i] = particles[particles.length - 1];
+          particles.pop();
+          particlePool.push(p);
+          continue;
+        }
+        const drag = Math.exp(-p.drag * dt);
+        p.vx *= drag;
+        p.vy *= drag;
+        p.vy += p.gravity * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.rot += p.spin * dt;
+        if (p.type === 'z') p.x += Math.sin(p.age * 2) * 4 * dt;
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       8. 环境元素：浮游光尘 + 泡泡
+       ───────────────────────────────────────────────────────────── */
+    const plankton = [];
+    const bubbles = [];
+    const bgFish = [];
+    const bgJelly = [];
+
+    function seedBackgroundLife() {
+      bgFish.length = 0;
+      bgJelly.length = 0;
+      const fishCount = LOW_POWER ? 3 : 6;
+      for (let i = 0; i < fishCount; i++) {
+        bgFish.push({
+          nx: Math.random(),
+          ny: .16 + Math.random() * .46,
+          size: 14 + Math.random() * 16,
+          speed: .006 + Math.random() * .014,
+          dir: Math.random() < .5 ? -1 : 1,
+          phase: Math.random() * TAU,
+          alpha: .11 + Math.random() * .08
+        });
+      }
+      const jellyCount = LOW_POWER ? 1 : 2;
+      for (let i = 0; i < jellyCount; i++) {
+        bgJelly.push({
+          nx: i ? .82 : .16,
+          ny: i ? .42 : .27,
+          size: 30 + Math.random() * 14,
+          speed: .10 + Math.random() * .08,
+          phase: Math.random() * TAU,
+          alpha: .15 + Math.random() * .09
+        });
+      }
+    }
+
+    function seedAmbient() {
+      seedBackgroundLife();
+      plankton.length = 0;
+      bubbles.length = 0;
+      const count = LOW_POWER ? 15 : 30;
+      for (let i = 0; i < count; i++) {
+        plankton.push({
+          nx: Math.random(),
+          ny: Math.random(),
+          size: .8 + Math.random() * 2.8,
+          speed: .002 + Math.random() * .008,
+          phase: Math.random() * TAU,
+          blink: .3 + Math.random() * 1.7,
+          color: Math.random() > .82 ? 'white' : 'cyan'
+        });
+      }
+      const bubbleCount = LOW_POWER ? 7 : 13;
+      for (let i = 0; i < bubbleCount; i++) {
+        bubbles.push(makeBubble(true));
+      }
+    }
+
+    function makeBubble(anywhere) {
+      return {
+        x: Math.random() * view.w,
+        y: anywhere ? Math.random() * view.h : view.h + 20 + Math.random() * 60,
+        r: 1.2 + Math.random() * 4.2,
+        speed: 5 + Math.random() * 16,
+        phase: Math.random() * TAU,
+        wobble: .6 + Math.random() * 1.4,
+        alpha: .12 + Math.random() * .24
+      };
+    }
+
+    function updateAmbient(dt) {
+      for (const b of bubbles) {
+        b.y -= b.speed * dt;
+        b.x += Math.sin(clock.t * b.wobble + b.phase) * 5 * dt;
+        if (b.y < -12) {
+          const nb = makeBubble(false);
+          Object.assign(b, nb);
+        }
+      }
+    }
+
+    function drawBackgroundLife() {
+      if (!jellyReady && !littleFishReady) return;
+      const t = clock.t;
+      // 按短边缩放并封顶：横屏/桌面不会把远景水母和小鱼放大成主角。
+      const u = clamp(Math.min(view.w, view.h) / 820, .60, 1.05);
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+
+      if (jellyReady) {
+        for (const j of bgJelly) {
+          const pulse = 1 + Math.sin(t * .7 + j.phase) * .035;
+          const x = j.nx * view.w + Math.sin(t * .11 + j.phase) * 12;
+          const y = j.ny * view.h + Math.sin(t * .18 + j.phase) * 16;
+          const w = j.size * u * pulse;
+          const h = w * (jellyImage.height / jellyImage.width);
+          ctx.save();
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'lighter';
+          drawGlow('cyan', x, y, w * 1.65, .07);
+          ctx.restore();
+          ctx.globalAlpha = j.alpha;
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.drawImage(jellyImage, x - w / 2, y - h / 2, w, h);
+        }
+      }
+
+      if (littleFishReady) {
+        for (const f of bgFish) {
+          const span = 1.16;
+          let nx = (f.nx + t * f.speed * f.dir) % span;
+          if (nx < 0) nx += span;
+          const x = (nx - .08) * view.w;
+          const y = f.ny * view.h + Math.sin(t * .42 + f.phase) * 10;
+          const w = f.size * u;
+          const h = w * (littleFishImage.height / littleFishImage.width);
+          ctx.globalAlpha = f.alpha;
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.save();
+          ctx.translate(x, y);
+          if (f.dir > 0) ctx.scale(-1, 1);
+          ctx.drawImage(littleFishImage, -w / 2, -h / 2, w, h);
+          ctx.restore();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function drawPlankton() {
+      const n = quality.mode === 'low' ? 15 : 30;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < n; i++) {
+        const p = plankton[i];
+        if (!p) continue;
+        const x = ((p.nx + Math.sin(clock.t * p.speed + p.phase) * .012) % 1 + 1) % 1 * view.w;
+        const y = ((p.ny - clock.t * p.speed * .06) % 1 + 1) % 1 * view.h;
+        const a = .12 + .28 * (0.5 + 0.5 * Math.sin(clock.t * p.blink + p.phase));
+        drawGlow(p.color, x, y, p.size * 5, a);
+      }
+      ctx.restore();
+    }
+
+    function drawAmbientBubbles() {
+      const n = quality.mode === 'low' ? 7 : 13;
+      ctx.save();
+      for (let i = 0; i < n; i++) {
+        const b = bubbles[i];
+        if (!b) continue;
+        const x = b.x + Math.sin(clock.t * b.wobble + b.phase) * 5;
+        ctx.globalAlpha = b.alpha;
+        ctx.strokeStyle = 'rgba(167,243,255,.75)';
+        ctx.lineWidth = .8;
+        ctx.beginPath();
+        ctx.arc(x, b.y, b.r, 0, TAU);
+        ctx.stroke();
+        ctx.globalAlpha = b.alpha * .65;
+        ctx.beginPath();
+        ctx.arc(x - b.r * .28, b.y - b.r * .3, b.r * .28, Math.PI * .8, Math.PI * 1.9);
+        ctx.strokeStyle = 'rgba(238,255,255,.9)';
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       9. 鲸体绘制：低多边形 + 代码网格 + 多重描边发光
+       ───────────────────────────────────────────────────────────── */
+    const BODY_PATH = new Path2D();
+    BODY_PATH.moveTo(111, 6);
+    BODY_PATH.bezierCurveTo(97, -47, 44, -72, -10, -62);
+    BODY_PATH.bezierCurveTo(-52, -55, -77, -26, -69, 5);
+    BODY_PATH.bezierCurveTo(-62, 38, -28, 57, 10, 55);
+    BODY_PATH.bezierCurveTo(56, 53, 93, 36, 111, 6);
+    BODY_PATH.closePath();
+
+    const TAIL_PATH = new Path2D();
+    TAIL_PATH.moveTo(4, -15);
+    TAIL_PATH.bezierCurveTo(-20, -23, -46, -44, -73, -36);
+    TAIL_PATH.bezierCurveTo(-58, -18, -51, -7, -64, 5);
+    TAIL_PATH.bezierCurveTo(-53, 25, -24, 25, 0, 17);
+    TAIL_PATH.closePath();
+
+    const FIN_PATH = new Path2D();
+    FIN_PATH.moveTo(18, 38);
+    FIN_PATH.bezierCurveTo(6, 55, 2, 69, 19, 66);
+    FIN_PATH.bezierCurveTo(38, 63, 50, 52, 48, 35);
+    FIN_PATH.closePath();
+
+    const FACETS = [
+      [[-69, -2], [-10, -62], [42, -56], 'rgba(105,222,255,.12)'],
+      [[-69, -2], [42, -56], [111, 6], 'rgba(126,243,255,.075)'],
+      [[-69, -2], [-28, 57], [10, 55], 'rgba(0,26,62,.18)'],
+      [[-69, -2], [10, 55], [111, 6], 'rgba(31,142,204,.09)'],
+      [[42, -56], [111, 6], [64, 20], 'rgba(178,250,255,.055)']
+    ];
+
+    function getBob() {
+      return Math.sin(clock.t * 1.35 + .4) * 2.4 * whale.scale;
+    }
+
+    function localToCanvas(lx, ly) {
+      const s = whale.scale;
+      const x1 = lx * whale.visualFlip * s;
+      const y1 = ly * s;
+      const c = Math.cos(whale.tilt);
+      const sn = Math.sin(whale.tilt);
+      return {
+        x: whale.x + x1 * c - y1 * sn,
+        y: whale.y + getBob() + x1 * sn + y1 * c
+      };
+    }
+
+    function mouthPos() {
+      return localToCanvas(24, 21);
+    }
+
+    function hitWhale(x, y) {
+      const bob = getBob();
+      const dx = (x - whale.x) / whale.scale;
+      const dy = (y - (whale.y + bob)) / whale.scale;
+      return (dx * dx) / (104 * 104) + (dy * dy) / (78 * 78) <= 1;
+    }
+
+    function codeGrid() {
+      const cols = quality.mode === 'low' ? 3 : 5;
+      const rows = quality.mode === 'low' ? 4 : 6;
+      const drift = (clock.t * 18) % 34;
+      ctx.save();
+      ctx.clip(BODY_PATH);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineWidth = .7;
+      ctx.strokeStyle = 'rgba(105,229,255,.09)';
+      for (let i = 0; i < cols; i++) {
+        const x = -78 + i * 39 + drift;
+        ctx.beginPath();
+        ctx.moveTo(x, -70);
+        ctx.lineTo(x - 9, 62);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(128,242,255,.06)';
+      for (let j = 0; j < 3; j++) {
+        const y = -45 + j * 32;
+        ctx.beginPath();
+        ctx.moveTo(-84, y);
+        ctx.lineTo(116, y - 10);
+        ctx.stroke();
+      }
+      ctx.font = '6px ui-monospace, SFMono-Regular, Menlo, monospace';
+      ctx.fillStyle = 'rgba(145,239,255,.32)';
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          if ((i + j + Math.floor(clock.t * 2)) % 3 === 0) continue;
+          const x = -66 + i * 32 + ((clock.t * 13 + i * 7) % 14);
+          const y = -48 + j * 19;
+          ctx.fillText((i + j) % 2 ? '01' : '10', x, y);
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawTail() {
+      ctx.save();
+      ctx.translate(-62, 7);
+      ctx.rotate(Math.sin(whale.tailPhase) * .16 + clamp(-whale.vy * .0012, -.08, .08));
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = 'rgba(102,235,255,.16)';
+      ctx.lineWidth = 8;
+      ctx.stroke(TAIL_PATH);
+      ctx.lineWidth = 3.2;
+      ctx.strokeStyle = 'rgba(126,242,255,.28)';
+      ctx.stroke(TAIL_PATH);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = 'rgba(11,68,112,.86)';
+      ctx.fill(TAIL_PATH);
+      ctx.fillStyle = 'rgba(83,199,236,.16)';
+      ctx.fill(TAIL_PATH);
+      ctx.strokeStyle = 'rgba(178,250,255,.55)';
+      ctx.lineWidth = 1.1;
+      ctx.stroke(TAIL_PATH);
+      ctx.beginPath();
+      ctx.moveTo(-18, -8);
+      ctx.quadraticCurveTo(-38, 2, -56, 6);
+      ctx.strokeStyle = 'rgba(138,238,255,.22)';
+      ctx.lineWidth = .9;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawFin() {
+      const flap = Math.sin(whale.tailPhase + 1.1) * .09;
+      ctx.save();
+      ctx.translate(22, 36);
+      ctx.rotate(flap);
+      ctx.translate(-22, -36);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = 'rgba(90,231,255,.18)';
+      ctx.lineWidth = 7;
+      ctx.stroke(FIN_PATH);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = 'rgba(16,84,132,.78)';
+      ctx.fill(FIN_PATH);
+      ctx.fillStyle = 'rgba(121,235,255,.15)';
+      ctx.fill(FIN_PATH);
+      ctx.strokeStyle = 'rgba(150,244,255,.45)';
+      ctx.lineWidth = 1;
+      ctx.stroke(FIN_PATH);
+      ctx.beginPath();
+      ctx.moveTo(29, 41);
+      ctx.quadraticCurveTo(17, 53, 19, 62);
+      ctx.strokeStyle = 'rgba(7,36,67,.55)';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawBody() {
+      ctx.save();
+      ctx.clip(BODY_PATH);
+
+      ctx.fillStyle = FIG.body;
+      ctx.fillRect(-100, -80, 225, 150);
+
+      // 低多边形色块
+      for (const f of FACETS) {
+        ctx.beginPath();
+        ctx.moveTo(f[0][0], f[0][1]);
+        ctx.lineTo(f[1][0], f[1][1]);
+        ctx.lineTo(f[2][0], f[2][1]);
+        ctx.closePath();
+        ctx.fillStyle = f[3];
+        ctx.fill();
+      }
+
+      // 腹部反光
+      ctx.beginPath();
+      ctx.ellipse(18, 40, 82, 27, -.08, 0, TAU);
+      ctx.fillStyle = 'rgba(146,237,255,.10)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(36, 17, 53, 47, -.2, 0, TAU);
+      ctx.fillStyle = 'rgba(109,231,255,.055)';
+      ctx.fill();
+
+      codeGrid();
+      ctx.restore();
+
+      // 身体填色和发光描边
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = 'rgba(13,62,102,.18)';
+      ctx.fill(BODY_PATH);
+
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = 'rgba(100,235,255,.07)';
+      ctx.lineWidth = 13;
+      ctx.stroke(BODY_PATH);
+      ctx.strokeStyle = 'rgba(108,239,255,.12)';
+      ctx.lineWidth = 7;
+      ctx.stroke(BODY_PATH);
+      ctx.strokeStyle = 'rgba(147,247,255,.36)';
+      ctx.lineWidth = 2.4;
+      ctx.stroke(BODY_PATH);
+      ctx.strokeStyle = 'rgba(222,254,255,.56)';
+      ctx.lineWidth = .9;
+      ctx.stroke(BODY_PATH);
+
+      // 背部高光
+      ctx.beginPath();
+      ctx.moveTo(-58, -40);
+      ctx.bezierCurveTo(-15, -70, 46, -65, 96, -17);
+      ctx.strokeStyle = 'rgba(235,255,255,.35)';
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+
+      // 呼吸光点
+      ctx.globalCompositeOperation = 'lighter';
+      const breathing = .5 + .5 * Math.sin(clock.t * 1.5);
+      for (let i = 0; i < 5; i++) {
+        const x = -40 + i * 22;
+        const y = 20 + Math.sin(i * 1.7) * 7;
+        ctx.globalAlpha = .14 + breathing * .18;
+        ctx.fillStyle = '#a8f8ff';
+        ctx.beginPath();
+        ctx.arc(x, y, 1.5, 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function drawEye() {
+      const sleepy = state === 'sleep';
+      const loading = state === 'poke';
+      const blink = whale.blink > 0 || sleepy;
+      ctx.save();
+      ctx.translate(82, -13);
+
+      if (blink) {
+        ctx.beginPath();
+        ctx.moveTo(-6, 0);
+        ctx.quadraticCurveTo(0, 3, 6, 0);
+        ctx.strokeStyle = 'rgba(214,255,255,.82)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 5.2, loading ? 5.8 : 4.8, 0, 0, TAU);
+        ctx.fillStyle = 'rgba(1,17,30,.92)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(184,253,255,.8)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-1.8, -2, 1.6, 0, TAU);
+        ctx.fillStyle = 'rgba(255,255,255,.95)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(1.8, 1.7, .7, 0, TAU);
+        ctx.fillStyle = 'rgba(141,247,255,.8)';
+        ctx.fill();
+      }
+
+      // 眼下微光
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow('cyan', 11, 14, 21, .16);
+      ctx.restore();
+    }
+
+    function drawMouth() {
+      const open = state === 'feed' && feedPhase === 'chew' || state === 'spit' || state === 'offer';
+      ctx.save();
+
+      // 鲸类腹褶：让头部更像海豚，而不是普通鱼
+      ctx.strokeStyle = 'rgba(156,239,255,.16)';
+      ctx.lineWidth = .9;
+      for (let i = 0; i < 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(31, 30 + i * 6);
+        ctx.quadraticCurveTo(60, 41 + i * 6, 89, 25 + i * 5);
+        ctx.stroke();
+      }
+
+      ctx.translate(96, 18);
+      ctx.strokeStyle = 'rgba(190,252,255,.68)';
+      ctx.lineWidth = 1.35;
+      ctx.beginPath();
+      if (open) {
+        ctx.ellipse(5, 1, 4.6, 2.8, -.08, 0, TAU);
+        ctx.fillStyle = 'rgba(3,27,45,.85)';
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(7, 5.4, 14, .6);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawWhale() {
+      const glowPulse = whale.glow > 1 ? whale.glow : 1;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow('cyan', whale.x - 14 * whale.scale, whale.y + 8, 330 * whale.scale, .20 * whale.glow);
+      drawGlow('cyan', whale.x + 36 * whale.scale, whale.y - 6, 185 * whale.scale, .22 * whale.glow);
+      drawGlow('white', whale.x + 62 * whale.scale, whale.y - 4, 46 * whale.scale, .28 * glowPulse);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(whale.x, whale.y + getBob());
+      ctx.rotate(whale.tilt);
+      const fx = (whale.visualFlip < 0 ? -1 : 1) * Math.max(.09, Math.abs(whale.visualFlip));
+      ctx.scale(fx * whale.scale, whale.scale);
+
+      let dolphinFrame = null;
+      if (dolphinIdleReady) {
+        if (state === 'sleep' && dolphinSleepReady) {
+          dolphinFrame = dolphinSleep;
+        } else if ((state === 'spit' || state === 'offer'
+                || (state === 'feed' && feedPhase === 'chew')) && dolphinHappyReady) {
+          dolphinFrame = dolphinHappy;
+        } else {
+          dolphinFrame = dolphinIdle;
+        }
+      }
+
+      if (dolphinFrame) {
+        // 海豚贴图默认头朝左；内层翻转后，visualFlip=1 就是头朝右。
+        ctx.save();
+        ctx.scale(-1, 1);
+        const w = 200;
+        const h = w * (dolphinFrame.height / dolphinFrame.width);
+        ctx.drawImage(dolphinFrame, -w / 2, -h / 2, w, h);
+        ctx.restore();
+      } else if (fishReady) {
+        // 兜底还是鲸鱼；正常加载时不会走到这里。
+        ctx.save();
+        ctx.scale(-1, 1);
+        const fishSize = 180;
+        ctx.drawImage(fishImage, -fishSize / 2, -fishSize / 2, fishSize, fishSize);
+        ctx.restore();
+      } else {
+        drawTail();
+        drawFin();
+        drawBody();
+        drawEye();
+        drawMouth();
+      }
+      ctx.restore();
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       10. 晶体莲：始终盛开 → 吸收光点 → 光晕变大
+       ───────────────────────────────────────────────────────────── */
+    const PETALS = [
+      { closed: 0, open: 0, len: 89, wid: 26, shade: 'back' },
+      { closed: -.24, open: -1.23, len: 73, wid: 25, shade: 'outer' },
+      { closed: .24, open: 1.23, len: 73, wid: 25, shade: 'outer' },
+      { closed: -.12, open: -.62, len: 83, wid: 27, shade: 'mid' },
+      { closed: .12, open: .62, len: 83, wid: 27, shade: 'mid' },
+      { closed: -.055, open: -.24, len: 72, wid: 21, shade: 'inner' },
+      { closed: .055, open: .24, len: 72, wid: 21, shade: 'inner' }
+    ];
+
+    const PETAL_COLORS = {
+      back: ['rgba(22,77,116,.62)', 'rgba(111,207,243,.24)', 'rgba(166,240,255,.58)'],
+      outer: ['rgba(36,124,166,.68)', 'rgba(155,233,255,.32)', 'rgba(214,251,255,.76)'],
+      mid: ['rgba(65,169,208,.74)', 'rgba(199,247,255,.42)', 'rgba(240,255,255,.88)'],
+      inner: ['rgba(120,213,242,.80)', 'rgba(232,254,255,.56)', 'rgba(255,255,255,.96)']
+    };
+
+    function drawPetal(len, wid, shade, open) {
+      const colors = PETAL_COLORS[shade];
+
+      // 晶体花瓣：外轮廓 + 左右切面 + 尖端高光
+      ctx.beginPath();
+      ctx.moveTo(0, 3);
+      ctx.quadraticCurveTo(-wid, -len * .27, 0, -len);
+      ctx.quadraticCurveTo(wid, -len * .27, 0, 3);
+      ctx.closePath();
+      ctx.fillStyle = colors[0];
+      ctx.fill();
+      // 只在瓣尖补一点冰蓝，不把整片花瓣洗成白色
+      ctx.beginPath();
+      ctx.moveTo(0, -len * .70);
+      ctx.quadraticCurveTo(-wid * .26, -len * .86, 0, -len);
+      ctx.quadraticCurveTo(wid * .26, -len * .86, 0, -len * .70);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(170,245,255,.22)';
+      ctx.fill();
+      ctx.strokeStyle = colors[2];
+      ctx.lineWidth = .9;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(0, 2);
+      ctx.quadraticCurveTo(-wid * .72, -len * .26, 0, -len * .98);
+      ctx.lineTo(0, 2);
+      ctx.closePath();
+      ctx.fillStyle = colors[1];
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(0, 2);
+      ctx.quadraticCurveTo(wid * .30, -len * .46, 0, -len * .88);
+      ctx.lineTo(0, 2);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(255,255,255,.13)';
+      ctx.fill();
+
+      // 冰裂纹 / 棱线
+      ctx.strokeStyle = 'rgba(235,255,255,.42)';
+      ctx.lineWidth = .7;
+      ctx.beginPath();
+      ctx.moveTo(0, 1);
+      ctx.lineTo(0, -len * .96);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(202,248,255,.23)';
+      ctx.lineWidth = .55;
+      ctx.beginPath();
+      ctx.moveTo(0, 2);
+      ctx.lineTo(-wid * .28, -len * .45);
+      ctx.moveTo(0, 2);
+      ctx.lineTo(wid * .21, -len * .58);
+      ctx.stroke();
+
+      // 右缘折光
+      ctx.beginPath();
+      ctx.moveTo(0, 2);
+      ctx.quadraticCurveTo(wid * .22, -len * .48, 0, -len * .9);
+      ctx.strokeStyle = 'rgba(255,255,255,.42)';
+      ctx.lineWidth = .65 + open * .25;
+      ctx.stroke();
+    }
+
+    function drawLotusLeaves() {
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      // 左右晶体莲叶
+      ctx.beginPath();
+      ctx.moveTo(-3, 3);
+      ctx.bezierCurveTo(-34, -4, -68, 5, -84, 21);
+      ctx.bezierCurveTo(-65, 29, -34, 27, -10, 14);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(8,55,82,.78)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(144,239,255,.28)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(3, 3);
+      ctx.bezierCurveTo(34, -4, 68, 5, 84, 21);
+      ctx.bezierCurveTo(65, 29, 34, 27, 10, 14);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(7,47,72,.76)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(144,239,255,.23)';
+      ctx.stroke();
+
+      // 叶面折光
+      ctx.strokeStyle = 'rgba(180,248,255,.15)';
+      ctx.lineWidth = .65;
+      ctx.beginPath();
+      ctx.moveTo(-8, 8);
+      ctx.lineTo(-58, 17);
+      ctx.moveTo(8, 8);
+      ctx.lineTo(58, 17);
+      ctx.stroke();
+
+      // 水面光晕
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = 'rgba(116,234,255,.14)';
+      ctx.lineWidth = .8;
+      ctx.beginPath();
+      ctx.ellipse(0, 18, 95, 10, 0, 0, TAU);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawLotus() {
+      if (!lotusReady) {
+        drawLotusVector();
+        return;
+      }
+
+      const s = lotus.scale;
+      const glow = clamp(lotus.energy / CONFIG.LOTUS_GLOW_MAX, 0, 1);
+      const pulse = lotus.pulse || 0;
+      const breath = 1 + glow * .04 + pulse * .016;
+      const imgW = 190;
+      const imgH = imgW * (lotusImage.height / lotusImage.width);
+      const cy = -imgH * .52;
+
+      ctx.save();
+      ctx.translate(lotus.x, lotus.y);
+      ctx.scale(s * breath, s * breath);
+
+      // 常驻水面光纹：即使还没吃光点，莲花也不会像贴纸一样浮着
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = 'rgba(124,232,255,.085)';
+      ctx.lineWidth = .85;
+      ctx.beginPath();
+      ctx.ellipse(0, 9, 122 + glow * 64, 13 + glow * 9, 0, 0, TAU);
+      ctx.stroke();
+      ctx.restore();
+
+      // 光点越多，晶体莲周围的光晕越大、越亮
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow('cyan', 0, cy, 290 + glow * 220 + pulse * 24, .15 + glow * .44);
+      drawGlow('white', 0, cy - 8, 130 + glow * 145, .16 + glow * .36);
+      drawGlow('gold', 0, cy, 34 + glow * 26, .05 + glow * .1);
+      ctx.restore();
+
+      // 水面的光环随能量扩大
+      if (glow > .01) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = `rgba(139,239,255,${.08 + glow * .18 + pulse * .08})`;
+        ctx.lineWidth = 1 + glow * 1.3;
+        ctx.beginPath();
+        ctx.ellipse(0, 8, 108 + glow * 90 + pulse * 10, 12 + glow * 13, 0, 0, TAU);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 用户提供的透明珍珠水晶莲；始终盛开，不做开花动画
+      ctx.drawImage(lotusImage, -imgW / 2, -imgH, imgW, imgH);
+
+      // 花心前景光：只加亮，不改变花瓣轮廓
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow('cyan', 0, cy, 70 + glow * 82, .06 + glow * .22);
+      ctx.restore();
+
+      ctx.restore();
+    }
+
+    function drawLotusVector() {
+      const s = lotus.scale;
+      const glow = clamp(lotus.energy / CONFIG.LOTUS_GLOW_MAX, 0, 1);
+      const pulse = lotus.pulse || 0;
+      const breath = 1 + glow * .045 + pulse * .018;
+
+      ctx.save();
+      ctx.translate(lotus.x, lotus.y);
+      ctx.scale(s * breath, s * breath);
+
+      // 光点越多，整圈光晕越大、越亮
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow('cyan', 0, -30, 220 + glow * 180, .15 + glow * .48);
+      drawGlow('white', 0, -36, 100 + glow * 115, .18 + glow * .42);
+      drawGlow('gold', 0, -30, 34 + glow * 24, .08 + glow * .16);
+      ctx.restore();
+
+      drawLotusLeaves();
+
+      // 光晕圈：直接读 energy，越大越明显
+      if (glow > .01) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = `rgba(133,240,255,${.08 + glow * .18 + pulse * .08})`;
+        ctx.lineWidth = 1 + glow * 1.4;
+        ctx.beginPath();
+        ctx.ellipse(0, 10, 108 + glow * 74 + pulse * 10, 13 + glow * 11, 0, 0, TAU);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 花茎
+      ctx.save();
+      ctx.strokeStyle = 'rgba(164,235,244,.28)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(0, 3);
+      ctx.bezierCurveTo(-3, 12, 2, 22, 0, 34);
+      ctx.stroke();
+      ctx.restore();
+
+      // 始终全开：直接使用 p.open 角度
+      for (const p of PETALS) {
+        ctx.save();
+        ctx.translate(0, -7);
+        ctx.rotate(p.open);
+        drawPetal(p.len, p.wid, p.shade, 1);
+        ctx.restore();
+      }
+
+      // 晶体花心
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow('cyan', 0, -32, 48 + glow * 38 + pulse * 8, .38 + glow * .4);
+      drawGlow('white', 0, -32, 24 + glow * 18, .66 + glow * .28);
+      const cy = -33;
+      const rr = 4.6 + glow * 2.4;
+      ctx.beginPath();
+      ctx.moveTo(0, cy - rr * 1.8);
+      ctx.lineTo(rr, cy);
+      ctx.lineTo(0, cy + rr * 1.4);
+      ctx.lineTo(-rr, cy);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(240,255,255,.96)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(172,244,255,.9)';
+      ctx.lineWidth = .7;
+      ctx.stroke();
+
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI * .9 + i * .36;
+        const r = 10 + glow * 14;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * r * .55, cy + Math.sin(a) * r * .3);
+        ctx.lineTo(Math.cos(a) * r, cy + Math.sin(a) * r * .5);
+        ctx.lineTo(Math.cos(a) * r * .72, cy + Math.sin(a) * r * .5 + .9);
+        ctx.closePath();
+        ctx.fillStyle = i % 2 ? 'rgba(185,247,255,.72)' : 'rgba(255,255,255,.82)';
+        ctx.fill();
+      }
+      ctx.restore();
+      ctx.restore();
+    }
+
+    function updateLotus(dt) {
+      lotus.pulse = damp(lotus.pulse || 0, 0, 2.2, dt);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       11. Canvas HUD：Loading 环、光斑、泡泡、文字卡
+       ───────────────────────────────────────────────────────────── */
+    function drawLoading() {
+      const head = localToCanvas(66, -70);
+      const x = clamp(head.x, 54, view.w - 54);
+      const y = clamp(head.y - 26, view.safeTop + 58, view.h - 160);
+      const t = clock.t;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow('cyan', 0, 0, 98, .19);
+      ctx.strokeStyle = 'rgba(157,243,255,.16)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(0, 0, 17, 0, TAU);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(218,255,255,.92)';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(0, 0, 17, t * 3.4, t * 3.4 + 1.45);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(107,239,255,.5)';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, 17, t * 3.4 + .1, t * 3.4 + .55);
+      ctx.stroke();
+
+      ctx.globalAlpha = .75;
+      ctx.fillStyle = 'rgba(226,255,255,.9)';
+      ctx.beginPath();
+      ctx.arc(Math.cos(t * 3.4) * 17, Math.sin(t * 3.4) * 17, 1.7, 0, TAU);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      ctx.font = '600 7.5px ui-monospace, SFMono-Regular, Menlo, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(211,251,255,.72)';
+      const dots = '.'.repeat(1 + Math.floor(t * 3) % 3);
+      ctx.fillText('LOADING' + dots, 0, -27);
+      ctx.restore();
+    }
+
+    function drawFood() {
+      if (!food) return;
+      const t = food.age;
+      const pulse = 1 + Math.sin(t * 4.2) * .12;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow('gold', food.x, food.y, 96 * pulse, .35);
+      drawGlow('white', food.x, food.y, 36 * pulse, .8);
+      spawnlessSparkle(food.x, food.y, t);
+      ctx.strokeStyle = 'rgba(255,233,176,.35)';
+      ctx.lineWidth = .9;
+      ctx.beginPath();
+      ctx.arc(food.x, food.y, (12 + (t * 20) % 26) * pulse, 0, TAU);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function spawnlessSparkle(x, y, t) {
+      ctx.strokeStyle = 'rgba(255,248,219,.65)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 4; i++) {
+        const a = t * .8 + i * Math.PI / 2;
+        const r1 = 13 + Math.sin(t * 2 + i) * 3;
+        const r2 = r1 + 6;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1);
+        ctx.lineTo(x + Math.cos(a) * r2, y + Math.sin(a) * r2);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(x, y, 3.2, 0, TAU);
+      ctx.fillStyle = 'rgba(255,255,245,.92)';
+      ctx.fill();
+    }
+
+    function drawOrbs() {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for (const o of orbs) {
+        const p = orbPoint(o, easeInOutCubic(clamp(o.t / o.dur, 0, 1)));
+        drawGlow('gold', p.x, p.y, 44, .42);
+        drawGlow('white', p.x, p.y, 16, .95);
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2.4, 0, TAU);
+        ctx.fillStyle = 'rgba(255,255,239,.98)';
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawBubble() {
+      if (!bubble) return;
+      const r = bubble.r;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow('cyan', bubble.x, bubble.y, r * 3.8, .22);
+      ctx.globalCompositeOperation = 'source-over';
+
+      const grad = ctx.createRadialGradient(
+        bubble.x - r * .38, bubble.y - r * .42, r * .08,
+        bubble.x, bubble.y, r
+      );
+      grad.addColorStop(0, 'rgba(255,255,255,.22)');
+      grad.addColorStop(.45, 'rgba(104,225,255,.055)');
+      grad.addColorStop(.85, 'rgba(56,172,255,.10)');
+      grad.addColorStop(1, 'rgba(155,246,255,.34)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(bubble.x, bubble.y, r, 0, TAU);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(187,252,255,.68)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(bubble.x, bubble.y, r * .82, Math.PI * 1.08, Math.PI * 1.58);
+      ctx.strokeStyle = 'rgba(255,255,255,.34)';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(bubble.x - r * .34, bubble.y - r * .38, r * .2, r * .09, -.7, 0, TAU);
+      ctx.fillStyle = 'rgba(255,255,255,.72)';
+      ctx.fill();
+
+      ctx.globalAlpha = .28;
+      ctx.font = `${Math.max(5, r * .16)}px ui-monospace, monospace`;
+      ctx.fillStyle = '#dffeff';
+      ctx.textAlign = 'center';
+      ctx.fillText('DREAM', bubble.x, bubble.y + r * .52);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    const CARD_FONT = '500 15px -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif';
+    const CARD_LINE = 23;
+
+    function wrapText(text, maxWidth) {
+      const chars = Array.from(text);
+      const lines = [];
+      let line = '';
+      for (const ch of chars) {
+        const test = line + ch;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = ch;
+        } else {
+          line = test;
+        }
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    function layoutCard(text, anchor) {
+      const w = Math.min(318, Math.max(218, view.w - 40));
+      ctx.save();
+      ctx.font = CARD_FONT;
+      const lines = wrapText(text, w - 36);
+      ctx.restore();
+      const h = 56 + lines.length * CARD_LINE + 13;
+      let x = clamp(anchor.x - w / 2, 18, view.w - w - 18);
+      const minY = view.safeTop + 86;
+      const maxY = Math.max(minY, lotus.y - h - 96);
+      let y = clamp(anchor.y - h - 26, minY, maxY);
+      return {
+        text, anchor, x, y, w, h, lines,
+        age: 0, alpha: 0, closing: false,
+        _font: CARD_FONT
+      };
+    }
+
+    function drawDreamCard() {
+      const c = dream.card;
+      if (!c || c.alpha < .01) return;
+      const { x, y, w, h, lines } = c;
+
+      ctx.save();
+      ctx.globalAlpha = c.alpha;
+
+      // 外层微光
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow('cyan', x + w * .5, y + h * .35, w * 1.08, .075);
+      ctx.globalCompositeOperation = 'source-over';
+
+      // 玻璃面板
+      roundedRect(x, y, w, h, 15);
+      ctx.fillStyle = 'rgba(2,13,26,.78)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(135,235,255,.19)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      const sheen = ctx.createLinearGradient(x + 20, 0, x + w - 20, 0);
+      sheen.addColorStop(0, 'rgba(118,237,255,0)');
+      sheen.addColorStop(.28, 'rgba(161,247,255,.58)');
+      sheen.addColorStop(.72, 'rgba(181,249,255,.36)');
+      sheen.addColorStop(1, 'rgba(118,237,255,0)');
+      ctx.fillStyle = sheen;
+      ctx.fillRect(x + 18, y + 18, w - 36, .7);
+
+      ctx.textAlign = 'left';
+      ctx.font = '600 8px ui-monospace, SFMono-Regular, Menlo, monospace';
+      ctx.fillStyle = 'rgba(154,235,255,.55)';
+      ctx.fillText('DREAM ECHO / 深梦回声', x + 18, y + 34);
+
+      // 打字机逐字显现
+      ctx.font = CARD_FONT;
+      ctx.fillStyle = 'rgba(231,253,255,.94)';
+      let remaining = Math.floor(dream.reveal);
+      let caret = null;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const count = clamp(remaining, 0, line.length);
+        const visible = line.slice(0, count);
+        const ly = y + 56 + i * CARD_LINE;
+        ctx.fillText(visible, x + 18, ly);
+        if (remaining > 0 && remaining < line.length && caret === null) {
+          caret = { x: x + 18 + ctx.measureText(visible).width + 2, y: ly };
+        }
+        remaining -= line.length;
+      }
+      if (caret && Math.sin(clock.t * 6) > -.15) {
+        ctx.fillStyle = 'rgba(149,245,255,.8)';
+        ctx.fillRect(caret.x, caret.y - 11, 1, 12);
+      }
+
+      ctx.fillStyle = 'rgba(175,235,252,.28)';
+      ctx.font = '9px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('一帧海', x + w - 17, y + h - 11);
+      ctx.restore();
+    }
+
+    function roundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       12. 粒子绘制
+       ───────────────────────────────────────────────────────────── */
+    const PARTICLE_COLOR = {
+      cyan: 'rgba(133,243,255,',
+      gold: 'rgba(255,229,167,',
+      white: 'rgba(238,254,255,',
+      pink: 'rgba(255,196,226,'
+    };
+
+    function drawParticles() {
+      if (!particles.length) return;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for (const p of particles) {
+        const t = p.age / p.life;
+        const fade = Math.pow(1 - t, 1.4);
+        if (p.type === 'glow') {
+          drawGlow(p.color, p.x, p.y, p.size * (1 + p.growth * t), p.alpha * fade);
+        } else if (p.type === 'ring') {
+          const r = lerp(p.r0, p.r1, easeOutCubic(t));
+          ctx.globalAlpha = p.alpha * fade;
+          ctx.strokeStyle = PARTICLE_COLOR[p.color] + '1)';
+          ctx.lineWidth = p.width * (1 - t * .45);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, Math.max(.5, r), 0, TAU);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        } else if (p.type === 'bubble') {
+          ctx.globalAlpha = p.alpha * fade;
+          ctx.strokeStyle = 'rgba(187,249,255,.8)';
+          ctx.lineWidth = .8;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * (1 + t * .7), 0, TAU);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        } else if (p.type === 'petal') {
+          ctx.save();
+          ctx.globalAlpha = p.alpha * fade;
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.scale(1, .43);
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size * 2.1, 0, TAU);
+          ctx.fillStyle = 'rgba(239,254,255,.75)';
+          ctx.fill();
+          ctx.restore();
+        } else if (p.type === 'z') {
+          ctx.globalAlpha = p.alpha * fade;
+          ctx.font = `${p.size}px ui-monospace, monospace`;
+          ctx.fillStyle = 'rgba(189,241,255,.85)';
+          ctx.textAlign = 'center';
+          ctx.fillText('z', p.x, p.y);
+          ctx.globalAlpha = 1;
+        }
+      }
+      ctx.restore();
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       13. 输入：单击鲸鱼 / 点水面投食 / 拖动跟随
+       ───────────────────────────────────────────────────────────── */
+    function pointFromEvent(e) {
+      const r = canvas.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
+
+    function onPointerDown(e) {
+      if (pointer.active) return;
+      if (e.button != null && e.button !== 0) return;
+      const p = pointFromEvent(e);
+      pointer.active = true;
+      pointer.id = e.pointerId;
+      pointer.mode = 'none';
+      pointer.x = p.x; pointer.y = p.y;
+      pointer.startX = p.x; pointer.startY = p.y;
+      pointer.lastX = p.x; pointer.lastY = p.y;
+      pointer.lastMoveAt = clock.t;
+      pointer.vx = 0; pointer.vy = 0;
+      pointer.moved = false;
+      lastInput = clock.t;
+      document.body.classList.add('engaged');
+      if (state === 'sleep') wake();
+
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+
+      if (hitWhale(p.x, p.y)) {
+        if (['patrol', 'sleep', 'follow'].includes(state)) {
+          pointer.mode = 'whale';
+          pokeWhale();
+        } else {
+          pointer.mode = 'ignored';
+        }
+        return;
+      }
+
+      if (['patrol', 'sleep', 'follow'].includes(state)) {
+        pointer.mode = 'pending';
+        spawnRing(p.x, p.y, 'cyan', 4, 28, .62, .9);
+      } else {
+        pointer.mode = 'ignored';
+      }
+    }
+
+    function onPointerMove(e) {
+      if (!pointer.active || e.pointerId !== pointer.id) return;
+      const p = pointFromEvent(e);
+      const dx = p.x - pointer.lastX;
+      const dy = p.y - pointer.lastY;
+      const now = clock.t;
+      const ellapsed = Math.max(.012, now - pointer.lastMoveAt);
+      pointer.vx = clamp(pointer.vx * .55 + (dx / ellapsed) * .45, -900, 900);
+      pointer.vy = clamp(pointer.vy * .55 + (dy / ellapsed) * .45, -900, 900);
+      pointer.x = p.x;
+      pointer.y = p.y;
+      pointer.lastX = p.x;
+      pointer.lastY = p.y;
+      pointer.lastMoveAt = now;
+      lastInput = now;
+
+      if (pointer.mode === 'pending') {
+        if (Math.hypot(p.x - pointer.startX, p.y - pointer.startY) > 9) {
+          if (['patrol', 'sleep', 'follow'].includes(state)) {
+            if (state === 'sleep') wake();
+            pointer.moved = true;
+            enterFollow();
+          }
+        }
+      }
+    }
+
+    function onPointerUp(e) {
+      if (!pointer.active || e.pointerId !== pointer.id) return;
+      if (pointer.mode === 'pending' && !pointer.moved) {
+        spawnFood(pointer.x, pointer.y);
+      } else if (pointer.mode === 'follow') {
+        followUntil = clock.t + 1.5;
+      }
+      pointer.active = false;
+      pointer.id = null;
+      pointer.mode = 'none';
+      pointer.vx = 0;
+      pointer.vy = 0;
+      try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+
+    function onPointerCancel(e) {
+      if (!pointer.active || e.pointerId !== pointer.id) return;
+      if (pointer.mode === 'follow') followUntil = clock.t + 1;
+      pointer.active = false;
+      pointer.id = null;
+      pointer.mode = 'none';
+      try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+
+    canvas.addEventListener('pointerdown', onPointerDown, { passive: true });
+    canvas.addEventListener('pointermove', onPointerMove, { passive: true });
+    canvas.addEventListener('pointerup', onPointerUp, { passive: true });
+    canvas.addEventListener('pointercancel', onPointerCancel, { passive: true });
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    /* ─────────────────────────────────────────────────────────────
+       14. 主循环与自适应降级
+       ───────────────────────────────────────────────────────────── */
+    function monitorPerformance(dt) {
+      if (LOW_POWER) return;
+      // 睡眠态是主动锁 30fps，不能据此误判为性能不足
+      if (state === 'sleep') {
+        quality.frames = 0;
+        quality.elapsed = 0;
+        return;
+      }
+      quality.frames += 1;
+      quality.elapsed += dt;
+      if (quality.elapsed >= 2.4) {
+        const fps = quality.frames / quality.elapsed;
+        if (fps < 46 && quality.mode !== 'low') quality.mode = 'low';
+        quality.frames = 0;
+        quality.elapsed = 0;
+      }
+    }
+
+    function update(dt) {
+      stateTime += dt;
+
+      if (state === 'patrol') updatePatrol(dt);
+      else if (state === 'feed') updateFeed(dt);
+      else if (state === 'offer') updateOffer(dt);
+      else if (state === 'follow') updateFollow(dt);
+      else if (state === 'sleep') updateSleep(dt);
+      else if (state === 'poke' || state === 'spit') brake(dt, 8);
+
+      updateWhale(dt);
+      updateDream(dt);
+      updateOrbs(dt);
+      updateParticles(dt);
+      updateAmbient(dt);
+      updateLotus(dt);
+      monitorPerformance(dt);
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, view.w, view.h);
+
+      drawBackgroundLife();
+      drawPlankton();
+      drawAmbientBubbles();
+      drawLotus();
+      drawFood();
+      drawWhale();
+      drawOrbs();
+      drawParticles();
+      drawBubble();
+      drawDreamCard();
+
+      if (state === 'poke') drawLoading();
+
+      if (DEBUG_OVERLAY) drawDebug();
+    }
+
+    function targetFrameRate() {
+      // 小米15 等 120Hz 屏：主动锁 60fps，绘制次数直接减半；安眠时再降到 30fps
+      return state === 'sleep' ? 30 : 60;
+    }
+
+    function frame(now) {
+      clock.raf = requestAnimationFrame(frame);
+      if (clock.paused) {
+        clock.last = now;
+        return;
+      }
+      if (!clock.last) clock.last = now;
+
+      const interval = 1000 / targetFrameRate();
+      if (clock.lastRender && now - clock.lastRender < interval - 1) return;
+
+      let dt = (now - clock.last) / 1000;
+      clock.last = now;
+      clock.lastRender = now;
+      if (dt > .05) dt = .05;
+      if (dt <= 0) return;
+      clock.t += dt;
+      update(dt);
+      render();
+    }
+
+    function startLoop() {
+      if (clock.raf) return;
+      clock.last = performance.now();
+      clock.lastRender = 0;
+      clock.raf = requestAnimationFrame(frame);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        clock.paused = true;
+        if (clock.raf) cancelAnimationFrame(clock.raf);
+        clock.raf = 0;
+      } else {
+        clock.paused = false;
+        clock.last = performance.now();
+        clock.lastRender = 0;
+        lastInput = clock.t;
+        startLoop();
+      }
+    });
+
+    let resizeTimer = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resize, 80);
+    }, { passive: true });
+    window.addEventListener('orientationchange', () => setTimeout(resize, 180), { passive: true });
+
+    /* ─────────────────────────────────────────────────────────────
+       15. 初始化
+       ───────────────────────────────────────────────────────────── */
+    function init() {
+      resize();
+      seedAmbient();
+      setState('patrol');
+      pickWaypoint();
+      lastInput = clock.t;
+      startLoop();
+    }
+
+    // 调试钩子：仅 ?debug=1 时暴露，用于真机自动截图与状态检查
+    function resizeDebug() {}
+    function drawDebug() {
+      const b = swimBounds();
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,80,160,.35)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(b.left, b.top, b.right - b.left, b.bottom - b.top);
+      ctx.fillStyle = 'rgba(180,255,240,.8)';
+      ctx.font = '10px ui-monospace, monospace';
+      ctx.fillText(`${state} / ${quality.mode} / ${particles.length}p / dpr ${view.dpr.toFixed(2)} / glow ${(lotus.energy / CONFIG.LOTUS_GLOW_MAX).toFixed(2)}`, 18, view.h - 44);
+      ctx.restore();
+    }
+
+    if (DEBUG) {
+      window.__lumenWhale = {
+        get state() { return state; },
+        get lotus() { return { energy: lotus.energy, glow: lotus.energy / CONFIG.LOTUS_GLOW_MAX }; },
+        get whale() { return { x: whale.x, y: whale.y + getBob(), scale: whale.scale }; },
+        get dream() { return { loaded: dream.loaded, card: !!dream.card, text: dream.text }; },
+        feed(x, y) { spawnFood(x == null ? view.w * .55 : x, y == null ? view.h * .42 : y); },
+        poke() { pokeWhale(); },
+        glow() { lotus.energy = CONFIG.LOTUS_GLOW_MAX - 1; addLotusLight(1); }
+      };
+    }
+
+    init();
+
+    // 预览用：?debug=1&glow=1 可直接看晶体莲最大光晕。
+    if (DEBUG && query.get('glow') === '1') {
+      setTimeout(() => {
+        if (window.__lumenWhale) window.__lumenWhale.glow();
+      }, 600);
+    }
+  })();
+  </script>
+</body>
+</html>

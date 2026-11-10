@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7ede2">
+  <meta name="description" content="沉思者：一个会自言自语的小机器人。桢·真游乐场的网页小实验。">
+  <link rel="icon" href="../logo.svg" type="image/svg+xml">
+  <title>沉思者 | 桢·真</title>
+  <link rel="stylesheet" href="../site.css">
+  <style>
+    .project-hero{padding:clamp(50px,7vw,80px) 0 30px;}
+    .robot-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(30px,5vw,60px);align-items:center;padding-bottom:clamp(40px,6vw,70px);}
+    .robot-copy .kicker{margin-bottom:20px;}
+    .robot-copy h1{margin:0;font-family:var(--serif);font-size:clamp(48px,7vw,78px);line-height:1;font-weight:900;letter-spacing:.06em;}
+    .robot-copy .lead{max-width:480px;margin:20px 0 0;color:var(--muted);font-size:14px;line-height:1.9;}
+    .robot-copy .meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:26px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:#9b8d7b;text-transform:uppercase;}
+    .robot-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;}
+    .robot-stage{
+      position:relative;min-height:560px;background:#06121f;border:1px solid rgba(13,94,86,.5);
+      overflow:hidden;display:flex;align-items:flex-end;justify-content:center;
+      box-shadow:0 26px 60px rgba(24,38,54,.16);
+    }
+    .robot-stage::before{
+      content:"";position:absolute;inset:0;
+      background:radial-gradient(70% 55% at 50% 65%,rgba(49,163,210,.22),transparent 70%);
+      pointer-events:none;
+    }
+    .robot-stage img{
+      position:relative;z-index:1;width:min(76%,420px);max-height:530px;object-fit:contain;
+      filter:drop-shadow(0 22px 30px rgba(0,0,0,.35));
+      transition:transform .3s ease;cursor:pointer;
+    }
+    .robot-stage img:active{transform:translateY(4px) scale(.99);}
+    .speech{
+      position:absolute;z-index:2;left:24px;top:24px;max-width:min(250px,60%);
+      padding:12px 14px;background:var(--paper-2);color:var(--ink);
+      border:1px solid var(--line);border-radius:2px 12px 12px 12px;
+      font-size:12px;line-height:1.7;box-shadow:0 10px 24px rgba(0,0,0,.18);
+      opacity:0;transform:translateY(6px);transition:opacity .25s ease,transform .25s ease;
+      pointer-events:none;
+    }
+    .speech.show{opacity:1;transform:translateY(0);}
+    .robot-stage .hint{
+      position:absolute;z-index:2;right:20px;bottom:18px;
+      font-family:var(--mono);font-size:8px;letter-spacing:.14em;color:rgba(210,242,255,.45);
+      text-transform:uppercase;pointer-events:none;
+    }
+    .robot-foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:0 0 60px;font-size:11px;color:#9b8d7b;}
+    .robot-foot a{color:var(--teal);text-decoration:none;}
+    @media(max-width:900px){
+      .robot-grid{grid-template-columns:minmax(0,1fr);}
+      .robot-stage{min-height:470px;order:2;}
+      .robot-stage img{max-height:440px;}
+      .robot-copy{order:1;}
+    }
+    @media(max-width:720px){
+      .robot-stage{min-height:400px;}
+      .robot-stage img{max-height:380px;}
+      .speech{left:16px;top:16px;max-width:70%;}
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="../index.html" aria-label="桢·真 首页">
+        <img src="../logo.svg" alt="">
+        <span class="brand-text">
+          <span class="brand-word">桢·真</span>
+          <span class="brand-sub">Carbon × Silicon</span>
+        </span>
+      </a>
+      <nav class="nav" aria-label="主导航">
+        <a class="active" href="../playground.html">游乐场</a>
+        <a href="../index.html#toolbox">工具箱</a>
+        <a href="../about.html">关于</a>
+        <a class="nav-play" href="../sea/">入海</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="project-hero">
+      <div class="wrap">
+        <p class="kicker">Playground / 02 · Web demo</p>
+        <h1>沉思者</h1>
+        <p class="lead">
+          一个坐在角落里的赛博打工人。想不明白的时候，就让它替你想一会儿。
+        </p>
+      </div>
+    </section>
+
+    <div class="wrap robot-grid">
+      <div class="robot-copy">
+        <p class="kicker">A small thinker robot</p>
+        <h2 style="margin:0;font-family:var(--serif);font-size:30px;line-height:1.3;font-weight:700;">我思故我在。</h2>
+        <p class="lead">
+          它原本是桌面角落里的透明小机器人，会每隔一会儿自言自语。
+          这里留了一个网页版：点它一下，听它说一句；不点，它也会自己开口。
+        </p>
+        <div class="meta">
+          <span>Click to talk</span><span>Electron · Web demo</span><span>No. 02</span>
+        </div>
+        <div class="robot-actions">
+          <button class="btn btn-primary" id="talkBtn" type="button">让它说一句</button>
+          <a class="btn btn-ghost" href="../playground.html">回到游乐场</a>
+        </div>
+      </div>
+
+      <div class="robot-stage" id="robotStage">
+        <div class="speech" id="speech">我思故我在。</div>
+        <img src="robot.png" id="robot" alt="沉思者小机器人" draggable="false">
+        <span class="hint">Click the robot</span>
+      </div>
+    </div>
+
+    <div class="wrap robot-foot">
+      <span>桌面版仍在施工；网页版是它的一个切片。</span>
+      <a href="../playground.html">← 游乐场</a>
+    </div>
+  </main>
+
+  <script>
+    const quotes = [
+      '我思故我在。',
+      '我是谁，我从哪里来，要到哪里去？',
+      '生存还是毁灭，这是一个问题。',
+      '上帝已死。',
+      '人生而自由。',
+      '他人即地狱。',
+      '焦虑是自由的眩晕。',
+      '听说每 45 分钟应该活动一下。',
+      '怎么还没到下班的点？',
+      '需要休息一下吗？',
+      '你在为谁而战斗？'
+    ];
+    const speech = document.getElementById('speech');
+    const robot = document.getElementById('robot');
+    let hideTimer = null;
+    let last = -1;
+
+    function say() {
+      let i = Math.floor(Math.random() * quotes.length);
+      if (i === last) i = (i + 1) % quotes.length;
+      last = i;
+      speech.textContent = quotes[i];
+      speech.classList.add('show');
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => speech.classList.remove('show'), 4200);
+    }
+
+    robot.addEventListener('click', say);
+    document.getElementById('talkBtn').addEventListener('click', say);
+    setInterval(() => {
+      if (!document.hidden) say();
+    }, 9000);
+  </script>
+</body>
+</html>

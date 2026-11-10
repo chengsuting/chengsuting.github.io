@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7ede2">
+  <meta name="description" content="狐妖化形：一只白狐、一位书生和一位忽然长开的美人。桢·真游乐场的网页小实验。">
+  <link rel="icon" href="../logo.svg" type="image/svg+xml">
+  <title>狐妖化形 | 桢·真</title>
+  <link rel="stylesheet" href="../site.css">
+  <style>
+    .fox-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(30px,5vw,60px);align-items:center;padding-bottom:clamp(40px,6vw,70px);}
+    .fox-copy h1{margin:0;font-family:var(--serif);font-size:clamp(48px,7vw,78px);line-height:1;font-weight:900;letter-spacing:.06em;}
+    .fox-copy .lead{max-width:480px;margin:20px 0 0;color:var(--muted);font-size:14px;line-height:1.9;}
+    .fox-copy .meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:26px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:#9b8d7b;text-transform:uppercase;}
+    .fox-stage{
+      position:relative;min-height:560px;background:#06121f;border:1px solid rgba(13,94,86,.5);
+      overflow:hidden;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 26px 60px rgba(24,38,54,.16);
+    }
+    .fox-stage::before{
+      content:"";position:absolute;inset:0;
+      background:radial-gradient(64% 55% at 50% 48%,rgba(49,163,210,.18),transparent 72%);
+      pointer-events:none;
+    }
+    .fox-stage img{
+      position:relative;z-index:1;width:auto;max-width:82%;max-height:520px;
+      object-fit:contain;filter:drop-shadow(0 22px 30px rgba(0,0,0,.35));
+      transition:opacity .18s ease,transform .3s ease;cursor:pointer;
+    }
+    .fox-stage img.pop{transform:scale(1.06);}
+    .fox-stage .speech{
+      position:absolute;z-index:2;left:24px;top:24px;max-width:min(260px,64%);
+      padding:12px 14px;background:var(--paper-2);color:var(--ink);
+      border:1px solid var(--line);border-radius:2px 12px 12px 12px;
+      font-size:12px;line-height:1.7;box-shadow:0 10px 24px rgba(0,0,0,.18);
+      opacity:0;transform:translateY(6px);transition:opacity .25s ease,transform .25s ease;
+      pointer-events:none;
+    }
+    .fox-stage .speech.show{opacity:1;transform:translateY(0);}
+    .fox-stage .hint{
+      position:absolute;z-index:2;right:20px;bottom:18px;
+      font-family:var(--mono);font-size:8px;letter-spacing:.14em;color:rgba(210,242,255,.45);
+      text-transform:uppercase;pointer-events:none;
+    }
+    .fox-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;}
+    .fox-foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:0 0 60px;font-size:11px;color:#9b8d7b;}
+    .fox-foot a{color:var(--teal);text-decoration:none;}
+    @media(max-width:900px){
+      .fox-grid{grid-template-columns:minmax(0,1fr);}
+      .fox-stage{min-height:470px;order:2;}
+      .fox-stage img{max-height:440px;}
+      .fox-copy{order:1;}
+    }
+    @media(max-width:720px){
+      .fox-stage{min-height:410px;}
+      .fox-stage img{max-height:390px;}
+      .fox-stage .speech{left:16px;top:16px;max-width:74%;}
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="../index.html" aria-label="桢·真 首页">
+        <img src="../logo.svg" alt="">
+        <span class="brand-text">
+          <span class="brand-word">桢·真</span>
+          <span class="brand-sub">Carbon × Silicon</span>
+        </span>
+      </a>
+      <nav class="nav" aria-label="主导航">
+        <a class="active" href="../playground.html">游乐场</a>
+        <a href="../index.html#toolbox">工具箱</a>
+        <a href="../about.html">关于</a>
+        <a class="nav-play" href="../sea/">入海</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="playground" style="padding:clamp(50px,7vw,80px) 0 30px;">
+      <div class="wrap">
+        <p class="kicker">Playground / 07 · Web demo</p>
+        <h1 style="margin:0;font-family:var(--serif);font-size:clamp(48px,7vw,78px);line-height:1;font-weight:900;letter-spacing:.06em;">狐妖化形</h1>
+        <p class="lead" style="max-width:560px;margin:20px 0 0;color:var(--muted);font-size:14px;line-height:1.9;">
+          一只白狐，读到一半的书生，和一位忽然长开的美人。
+          点它一下，让它从狐狸变成人。
+        </p>
+      </div>
+    </section>
+
+    <div class="wrap fox-grid">
+      <div class="fox-copy">
+        <p class="kicker">A fox-spirit in the study</p>
+        <h2 style="margin:0;font-family:var(--serif);font-size:30px;line-height:1.3;font-weight:700;">道可道，非常道。</h2>
+        <p class="lead">
+          它原本是桌面角落里的透明狐妖，会自己背书，也会在你点它的时候化形。
+          这里留了一个网页版：狐狸、书生、美人，三秒钟的变身。
+        </p>
+        <div class="meta">
+          <span>Click to transform</span><span>Electron · Web demo</span><span>No. 07</span>
+        </div>
+        <div class="fox-actions">
+          <button class="btn btn-primary" id="transformBtn" type="button">让它化形</button>
+          <a class="btn btn-ghost" href="../playground.html">回到游乐场</a>
+        </div>
+      </div>
+
+      <div class="fox-stage" id="foxStage">
+        <div class="speech" id="speech">道可道，非常道。</div>
+        <img src="fox.png" id="fox" alt="聊斋白狐" draggable="false">
+        <span class="hint">Click the fox</span>
+      </div>
+    </div>
+
+    <div class="wrap fox-foot">
+      <span>桌面版仍在施工；网页版是它的一个切片。</span>
+      <a href="../playground.html">← 游乐场</a>
+    </div>
+  </main>
+
+  <script>
+    const states = {
+      fox: { img: 'fox.png', quote: '道可道，非常道。' },
+      fox1: { img: 'fox-1.png', quote: '天地玄黄，宇宙洪荒。' },
+      boy: { img: 'boy.png', quote: '奇变偶不变，符号看象限。' },
+      beauty: { img: 'beauty.png', quote: '你有问题吗？' }
+    };
+    const fox = document.getElementById('fox');
+    const speech = document.getElementById('speech');
+    let current = 'fox';
+    let busy = false;
+    let hideTimer = null;
+    let returnTimer = null;
+
+    function say(text) {
+      speech.textContent = text;
+      speech.classList.add('show');
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => speech.classList.remove('show'), 4000);
+    }
+
+    function setState(name) {
+      current = name;
+      fox.src = states[name].img;
+      fox.alt = name === 'fox' || name === 'fox1' ? '聊斋白狐' : (name === 'boy' ? '白狐书生' : '化形后的美人');
+      say(states[name].quote);
+    }
+
+    function transform() {
+      if (busy) return;
+      if (current !== 'fox' && current !== 'fox1') {
+        // 已经是人形，点一下变回狐狸
+        busy = true;
+        clearTimeout(returnTimer);
+        fox.classList.add('pop');
+        setState('fox');
+        setTimeout(() => { fox.classList.remove('pop'); busy = false; }, 320);
+        return;
+      }
+      busy = true;
+      clearTimeout(returnTimer);
+      setState('fox1');
+      setTimeout(() => setState('boy'), 380);
+      setTimeout(() => {
+        setState('beauty');
+        busy = false;
+        returnTimer = setTimeout(() => {
+          if (current === 'beauty') setState('boy');
+        }, 5000);
+      }, 760);
+    }
+
+    fox.addEventListener('click', transform);
+    document.getElementById('transformBtn').addEventListener('click', transform);
+  </script>
+</body>
+</html>
